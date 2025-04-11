@@ -1,77 +1,92 @@
-
 import filterJSON, { getMarketInfo, getIndentificationInfo } from "./filterjson.mjs"
+import Groups from "./groups.mjs"
+import Games, { CreatorTypes } from "./games.mjs"
 
-const Games = {}
+const Profile = {}
 
-const CreatorTypes = {
-    User: "User",
-    Group: "Group",
+Profile.getBasicInfo = async function (userId) {
+    const response = await fetch(`https://users.roblox.com/v1/users/${userId}`)
+    if (!response.ok) throw new Error("Failed to get profile info")
+    const data = await response.json()
+    return data
 }
 
-Games.get = async function(creatorId, creatorType) {
-    const creatorTypeUris = {
-        [CreatorTypes.User]: "users",
-        [CreatorTypes.Group]: "groups",
-    }
+Profile.getFollowersCount = async function (userId) {
+    const response = await fetch(`https://friends.roblox.com/v1/users/${userId}/followers/count`)
+    if (!response.ok) return 0
+    const data = await response.json()
+    return data.count || 0
+}
 
-    const creatorTypeUri = creatorTypeUris[creatorType]
-    if (!creatorTypeUri) {
-        throw new Error("Unknown creator type.")
-    }
-
-    const games = await filterJSON({
-        url: `https://games.roblox.com/v2/${creatorTypeUri}/${creatorId}/games?accessFilter=2&limit=50&sortOrder=Asc`,
+Profile.getFollowings = async function (userId) {
+    const results = await filterJSON({
+        url: `https://friends.roblox.com/v1/users/${userId}/followings?limit=100`,
         exhaust: true,
-        filter: function(game) {
-            return {
-                id: game.id,
-                name: game.name,
-                placeId: game.rootPlaceId,
-                creator: game.creator,
-                visits: game.placeVisits,
-                playing: game.playing,
-                isActive: game.isActive,
-            }
-        },
+        filter: getIndentificationInfo
     })
+    return results
+}
 
-    // Append thumbnails and details
+Profile.getFavoriteCounts = async function (universeId) {
+    const response = await fetch(`https://games.roblox.com/v1/games/${universeId}/votes`)
+    if (!response.ok) return { favorites: 0 }
+    const data = await response.json()
+    return { favorites: data.favoritedCount || 0 }
+}
+
+Profile.getPublicAssets = async function (userId) {
+    const games = await Games.get(userId, CreatorTypes.User)
+    const groups = await Groups.get(userId)
+
+    let result = {
+        userId,
+        username: null,
+        displayName: null,
+        description: null,
+        isBanned: false,
+        created: null,
+        followers: 0,
+        following: [],
+        gamePasses: [],
+        groupGamePasses: [],
+        groupStoreAssets: [],
+        games: [],
+    }
+
+    const basicInfo = await Profile.getBasicInfo(userId)
+    const followerCount = await Profile.getFollowersCount(userId)
+    const followings = await Profile.getFollowings(userId)
+
+    Object.assign(result, basicInfo)
+    result.followers = followerCount
+    result.following = followings
+
     for (const game of games) {
-        try {
-            // Thumbnails
-            const thumbRes = await fetch(`https://thumbnails.roblox.com/v1/places/gameicons?placeIds=${game.placeId}&size=128x128&format=Png&isCircular=false`)
-            const thumbs = await thumbRes.json()
-            game.thumbnail = thumbs.data?.[0]?.imageUrl || null
+        const gamePasses = await Games.getPasses(game.id)
+        const favoriteInfo = await Profile.getFavoriteCounts(game.id)
+        game.favorites = favoriteInfo.favorites
 
-            // Game metadata
-    followersCount: followers.count,
-    followingCount: following.count,
-    avatar: avatar.data?.[0]?.imageUrl || null,
-  };
-};
+        result.games.push(game)
+        result.gamePasses.push(...gamePasses)
+    }
 
-Profile.getExtendedData = async function (userId) {
-  const groups = await Groups.get(userId);
-  const games = await Games.get(userId, CreatorTypes.User);
+    for (const group of groups) {
+        const groupGames = await Games.get(group.id, CreatorTypes.Group)
+        const storeAssets = await Groups.getStoreAssets(group.id)
 
-  // Group-owned games
-  for (const group of groups) {
-    const groupGames = await Games.get(group.id, CreatorTypes.Group);
-    games.push(...groupGames);
-  }
+        for (const game of groupGames) {
+            const gamePasses = await Games.getPasses(game.id)
+            const favoriteInfo = await Profile.getFavoriteCounts(game.id)
+            game.favorites = favoriteInfo.favorites
 
-  let allGamePasses = [];
-  for (const game of games) {
-    const passes = await Games.getPasses(game.id);
-    game.passes = passes;
-    allGamePasses.push(...passes);
-  }
+            result.groupGamePasses.push(...gamePasses)
+            result.games.push(game)
+        }
 
-  return {
-    groups,
-    games,
-    allOwnedGamepasses: allGamePasses,
-  };
-};
+        result.groupStoreAssets.push(...storeAssets)
+    }
 
-export default Profile;
+    return result
+}
+
+export default Profile
