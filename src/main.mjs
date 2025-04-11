@@ -23,18 +23,16 @@ async function getPublicAssets(userId) {
 
 	// For each group the user owns
 	for (const group of groups) {
-		const groupGames = await Games.get(group.id, CreatorTypes.Group)
-		const storeAssets = await Groups.getStoreAssets(group.id)
+   	 const groupGames = await Games.get(group.id, CreatorTypes.Group)
+   	 const storeAssets = await Groups.getStoreAssets(group.id) || []
 
-		// Get gamepasses from group-owned games
-		for (const game of groupGames) {
-			const gamePasses = await Games.getPasses(game.id)
-			result.GroupPasses.push(...gamePasses)
-		}
+ 	   for (const game of groupGames) {
+  	      const gamePasses = await Games.getPasses(game.id)
+   	     result.GroupPasses.push(...gamePasses)
+   	 }
 
-		// Add group store assets
-		result.GroupMerch.push(...storeAssets)
-	}
+    result.GroupMerch.push(...storeAssets)
+}
 
 	return result
 }
