@@ -3,42 +3,40 @@ import Games, { CreatorTypes } from "./games.mjs"
 import Users from "./users.mjs"
 
 async function getPublicAssets(userId) {
-    // Fetch all games and groups owned by the user
-    const games = await Games.get(userId, CreatorTypes.User)
-    const groups = await Groups.get(userId)
+	const games = await Games.get(userId, CreatorTypes.User)
+	const groups = await Groups.get(userId)
+	const userStoreAssets = await Users.getStoreAssets(userId)
 
-    // Fetch all user store assets (T-Shirts, Shirts, Pants, etc.)
-    const userStoreAssets = await Users.getStoreAssets(userId)
+	let result = {
+		UserPasses: [],   // Formerly gamePasses
+		UserMerch: userStoreAssets || [],
 
-    let result = {
-        gamePasses: [],
-        groupGamePasses: [],
-        groupStoreAssets: [],
-        userStoreAssets: userStoreAssets || [],
-    }
+		GroupPasses: [],
+		GroupMerch: [],
+	}
 
-    // Add gamepasses from personal games
-    for (const game of games) {
-        const gamePasses = await Games.getPasses(game.id)
-        result.gamePasses.push(...gamePasses)
-    }
+	// Get gamepasses from personal games
+	for (const game of games) {
+		const gamePasses = await Games.getPasses(game.id)
+		result.UserPasses.push(...gamePasses)
+	}
 
-    // Add group-owned gamepasses and store assets
-    for (const group of groups) {
-        const groupGames = await Games.get(group.id, CreatorTypes.Group)
-        const storeAssets = await Groups.getStoreAssets(group.id)
+	// For each group the user owns
+	for (const group of groups) {
+		const groupGames = await Games.get(group.id, CreatorTypes.Group)
+		const storeAssets = await Groups.getStoreAssets(group.id)
 
-        for (const game of groupGames) {
-            const gamePasses = await Games.getPasses(game.id)
-            result.groupGamePasses.push(...gamePasses)
-        }
+		// Get gamepasses from group-owned games
+		for (const game of groupGames) {
+			const gamePasses = await Games.getPasses(game.id)
+			result.GroupPasses.push(...gamePasses)
+		}
 
-        result.groupStoreAssets.push(...storeAssets)
-    }
+		// Add group store assets
+		result.GroupMerch.push(...storeAssets)
+	}
 
-    return result
+	return result
 }
 
-// Uncomment to test locally
-const result = await getPublicAssets(/* UserId here as a string or number */)
-console.log(result)
+export default getPublicAssets
