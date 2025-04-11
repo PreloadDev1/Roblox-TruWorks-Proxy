@@ -1,18 +1,21 @@
-// app.mjs
 import express from "express"
-import getPublicAssets from "./main.mjs" // ✅ make sure this is the updated main.mjs
+import getPublicAssets from "./main.mjs" // ✅ Importing the actual logic
 
 const app = express()
+const PORT = process.env.PORT || 3000
 
+// 🎯 Key route for fetching public assets
 app.get("/assets/:userId", async (req, res) => {
 	try {
-		const result = await getPublicAssets(req.params.userId)
+		const userId = req.params.userId
+		const result = await getPublicAssets(userId)
 		res.json(result)
-	} catch (e) {
-		console.error(e)
-		res.status(500).json({ error: "Failed to get assets" })
+	} catch (err) {
+		console.error("[/assets/:userId]", err)
+		res.status(500).json({ error: "Failed to fetch assets" })
 	}
 })
 
-const PORT = process.env.PORT || 3000
-app.listen(PORT, () => console.log("Server running on", PORT))
+app.listen(PORT, () => {
+	console.log("Proxy running on port", PORT)
+})
