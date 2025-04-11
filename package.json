@@ -2,9 +2,10 @@
   "name": "Roblox-TruWorks-Proxy",
   "version": "1.0.0",
   "description": "Compiles a list of public assets owned by a Roblox user.",
-  "main": "index.js",
+  "type": "module",
+  "main": "app.mjs",
   "scripts": {
-    "app-start": "node main.mjs"
+    "start": "node app.mjs"
   },
   "author": "PreloadDev",
   "license": "ISC"
