@@ -15,9 +15,13 @@ app.get("/proxy", async (req, res) => {
 	try {
 		const response = await axios.get(target);
 		res.json(response.data);
-	} catch (err) {
-		res.status(500).json({ error: err.message });
-	}
+catch (err) {
+  console.error("Error fetching target:", err.response?.status, err.response?.data || err.message);
+  res.status(err.response?.status || 500).json({
+    error: err.response?.data || err.message,
+    code: err.code || "unknown"
+  });
+}
 });
 
 const PORT = process.env.PORT || 3000;
