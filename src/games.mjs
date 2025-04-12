@@ -1,12 +1,12 @@
 // src/games.mjs
 
-import filterJSON, { getMarketInfo, getIdentificationInfo } from "./filterjson.mjs";
+import filterJSON from "./filterjson.mjs";
 
 const Games = {};
 
 const CreatorTypes = {
-    User: "User",
-    Group: "Group",
+    User: "Users",
+    Group: "Groups",
 };
 
 // Get all games created by a user or group
@@ -25,16 +25,16 @@ Games.get = async function (creatorId, creatorType) {
         filter: (game) => ({
             ID: game.id,
             Name: game.name,
-            Thumbnail: null, // Will be filled separately by getThumbnails
-            placeId: game.rootPlace?.id,
-            created: game.created,
-            updated: game.updated,
-            playing: game.playing,
-            visits: game.visits,
-            maxPlayers: game.maxPlayers,
+            Thumbnail: null, // Will be injected via getThumbnails
+            PlaceID: game.rootPlace?.id,
+            Created: game.created,
+            Updated: game.updated,
+            Active: game.playing,
+            Visits: game.visits,
+            MaxPlayers: game.maxPlayers,
             CreatorType: creatorType,
             CreatorID: creatorId,
-            universeId: game.id,
+            UniverseID: game.id,
         }),
     });
 
@@ -48,7 +48,7 @@ Games.getThumbnails = async function (universeIds = []) {
     const res = await fetch(`https://thumbnails.roblox.com/v1/games/icons?universeIds=${idsParam}&size=150x150&format=Png&isCircular=false`);
     const data = await res.json();
     return data.data.map(item => ({
-        universeId: item.targetId,
+        UniverseID: item.targetId,
         Thumbnail: item.imageUrl,
     }));
 };
@@ -60,7 +60,7 @@ Games.getFavorites = async function (universeId) {
     return data.favoritesCount;
 };
 
-// Get gamepasses for a universe and structure them
+// Get gamepasses for a universe
 Games.getPasses = async function (universeId, creatorType, creatorId) {
     return await filterJSON({
         url: `https://games.roblox.com/v1/games/${universeId}/game-passes?limit=10&sortOrder=1`,
