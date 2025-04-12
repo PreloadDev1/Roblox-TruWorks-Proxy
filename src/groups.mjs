@@ -8,18 +8,24 @@ Groups.get = async function(userId) {
         url: `https://groups.roblox.com/v1/users/${userId}/groups/roles?includeLocked=false&includeNotificationPreferences=false`,
         exhaust: false,
         filter: function(row) {
-            const group = row.group
-            if (!group || group.owner?.userId !== userId) return
+            const group = row.group;
+            if (!group) return;
+            if (group.owner?.userId !== userId) {
+                console.log(`[SKIP] User is not owner of group ${group.name}`);
+                return;
+            }
 
+            console.log(`[INCLUDE] Group ${group.name} (${group.id}) owned by ${userId}`);
             return {
                 ID: group.id,
                 Name: group.name,
-            }
+            };
         }
-    })
+    });
 
-    return groups
-}
+    console.log("[FINAL GROUPS]", groups.map(g => g.Name));
+    return groups;
+};
 
 Groups.getStoreAssets = async function(groupId) {
     const storeAssets = await filterJSON({
