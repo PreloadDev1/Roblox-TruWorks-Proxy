@@ -63,10 +63,7 @@ Games.getFavorites = async function (universeId) {
 };
 
 Games.getPasses = async function (universeId, creatorType, creatorId) {
-	if (!universeId || !creatorType || !creatorId) {
-		console.warn("Invalid game pass fetch params:", { universeId, creatorType, creatorId });
-		return [];
-	}
+	if (!universeId || !creatorType || !creatorId) return [];
 
 	return await filterJSON({
 		url: `https://games.roblox.com/v1/games/${universeId}/game-passes?limit=10&sortOrder=1`,
@@ -84,3 +81,4 @@ Games.getPasses = async function (universeId, creatorType, creatorId) {
 
 export default Games;
 export { CreatorTypes };
+
