@@ -54,13 +54,11 @@ Games.getFavorites = async function (universeId) {
 };
 
 Games.getPasses = async function (universeId, creatorType, creatorId) {
-    const passes = await filterJSON({
-        url: `https://games.roblox.com/v1/games/${universeId}/game-passes?limit=10&sortOrder=1`,
-        exhaust: true,
-        filter: getMarketInfo(creatorType, creatorId),
-    })
-
-    return passes
+	return await filterJSON({
+		url: `https://games.roblox.com/v1/games/${universeId}/game-passes?limit=10&sortOrder=1`,
+		exhaust: true,
+		filter: getMarketInfo(creatorType, creatorId),
+	})
 }
 
 export default Games;
