@@ -1,5 +1,3 @@
-// src/games.mjs
-
 import filterJSON from "./filterjson.mjs";
 import { getThumbnail } from "./thumbnails.mjs";
 
@@ -10,7 +8,6 @@ const CreatorTypes = {
 	Group: "Groups",
 };
 
-// Get all games created by a user or group
 Games.get = async function (creatorId, creatorType) {
 	const creatorTypeUris = {
 		[CreatorTypes.User]: "users",
@@ -26,7 +23,7 @@ Games.get = async function (creatorId, creatorType) {
 		filter: (game) => ({
 			ID: game.id,
 			Name: game.name,
-			Thumbnail: null, // To be filled in below
+			Thumbnail: null,
 			PlaceID: game.rootPlace?.id,
 			Created: game.created,
 			Updated: game.updated,
@@ -39,7 +36,6 @@ Games.get = async function (creatorId, creatorType) {
 		}),
 	});
 
-	// Attach thumbnails to each game
 	const thumbnails = await Games.getThumbnails(games.map(g => g.UniverseID));
 	for (const game of games) {
 		const thumb = thumbnails.find(t => t.UniverseID === game.UniverseID);
@@ -49,7 +45,6 @@ Games.get = async function (creatorId, creatorType) {
 	return games;
 };
 
-// Get thumbnails for multiple universeIds
 Games.getThumbnails = async function (universeIds = []) {
 	if (universeIds.length === 0) return [];
 	const idsParam = universeIds.join(",");
@@ -61,15 +56,18 @@ Games.getThumbnails = async function (universeIds = []) {
 	}));
 };
 
-// Get favorite count for a universe
 Games.getFavorites = async function (universeId) {
 	const res = await fetch(`https://games.roblox.com/v1/games/${universeId}/favorites/count`);
 	const data = await res.json();
 	return data.favoritesCount;
 };
 
-// Get gamepasses for a universe
 Games.getPasses = async function (universeId, creatorType, creatorId) {
+	if (!universeId || !creatorType || !creatorId) {
+		console.warn("Invalid game pass fetch params:", { universeId, creatorType, creatorId });
+		return [];
+	}
+
 	return await filterJSON({
 		url: `https://games.roblox.com/v1/games/${universeId}/game-passes?limit=10&sortOrder=1`,
 		exhaust: true,
