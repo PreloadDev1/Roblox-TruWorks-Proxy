@@ -21,14 +21,12 @@ Groups.get = async function(userId) {
     return groups
 }
 
-Groups.getStoreAssets = async function(groupId) {
-    const storeAssets = await filterJSON({
-        url: `https://catalog.roblox.com/v1/search/items/details?CreatorTargetId=${groupId}&CreatorType=2&Limit=30`,
-        exhaust: true,
-        filter: getMarketInfo,
-    })
-
-    return storeAssets
+Groups.getStoreAssets = async function (groupId, creatorType, creatorId) {
+	return await filterJSON({
+		url: `https://catalog.roblox.com/v1/search/items/details?CreatorTargetId=${groupId}&CreatorType=2&Limit=30`,
+		exhaust: true,
+		filter: getMarketInfo(creatorType, creatorId),
+	})
 }
 
 
