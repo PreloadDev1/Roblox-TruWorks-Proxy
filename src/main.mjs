@@ -11,14 +11,16 @@ async function getPublicAssets(userId) {
 	};
 
 	try {
+		// Get personal games, groups owned, and user-created merch
 		const games = await Games.get(userId, CreatorTypes.User);
 		const groups = await Groups.get(userId);
-		const userStoreAssets = await Users.getStoreAssets(userId);
+		const userStoreAssets = await Users.getStoreAssets(userId, CreatorTypes.User, userId);
+
 		if (Array.isArray(userStoreAssets)) {
 			result.UserMerch.push(...userStoreAssets);
 		}
 
-		// User-owned gamepasses
+		// Fetch user-owned gamepasses
 		for (const game of games) {
 			const passes = await Games.getPasses(game.UniverseID, CreatorTypes.User, userId);
 			if (Array.isArray(passes)) {
@@ -26,11 +28,12 @@ async function getPublicAssets(userId) {
 			}
 		}
 
-		// Group-owned passes and assets
+		// Fetch group-owned passes and merch
 		for (const group of groups) {
 			const groupId = group.ID;
+
 			const groupGames = await Games.get(groupId, CreatorTypes.Group);
-			const groupAssets = await Groups.getStoreAssets(groupId);
+			const groupAssets = await Users.getStoreAssets(groupId, CreatorTypes.Group, groupId);
 
 			if (Array.isArray(groupAssets)) {
 				result.GroupMerch.push(...groupAssets);
