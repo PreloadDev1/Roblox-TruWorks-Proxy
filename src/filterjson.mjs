@@ -1,51 +1,57 @@
-export default async function filterJSON(parameters) {
-    let results = []
+async function getThumbnail(id, type = "Asset") {
+    const endpoint = type === "Asset"
+        ? `https://thumbnails.roblox.com/v1/assets?assetIds=${id}&size=420x420&format=Png&isCircular=false`
+        : `https://thumbnails.roblox.com/v1/game-passes?gamePassIds=${id}&size=150x150&format=Png&isCircular=false`;
 
     try {
-        let cursor = ""
+        const response = await fetch(endpoint);
+        const json = await response.json();
+        return json?.data?.[0]?.imageUrl || null;
+    } catch (err) {
+        console.error("Thumbnail fetch failed:", err);
+        return null;
+    }
+}
 
-        const response = await fetch(parameters.url + `&cursor=${cursor}`)
-        if (!response.ok) {
-            return
-        }
+export default async function filterJSON(parameters) {
+    let results = [];
+    let cursor = "";
 
-        const body = await response.json()
+    try {
+        do {
+            const response = await fetch(parameters.url + `&cursor=${cursor}`);
+            if (!response.ok) break;
 
-        for (const row of body.data) {
-            const result = parameters.filter(row)
-            if (result) {
-                results.push(result)
+            const body = await response.json();
+            for (const row of body.data) {
+                const filtered = await parameters.filter(row);
+                if (filtered) results.push(filtered);
             }
-        }
 
-        if (body.nextPageCursor && parameters.exhaust) {
-            cursor = body.nextPageCursor
-        }
-
-    } 
-    catch (error) {
-        console.log(error)
+            cursor = parameters.exhaust && body.nextPageCursor ? body.nextPageCursor : null;
+        } while (cursor);
+    } catch (error) {
+        console.log("filterJSON error:", error);
     }
 
-    return results
+    return results;
 }
 
-export function getMarketInfo(creatorType, creatorId) {
-    return function (item) {
-        return {
-            ID: item.id,
-            Name: item.name,
-            Price: item.price ?? null,
-            CreatorType: creatorType,
-            CreatorID: creatorId,
-            Thumbnail: item.thumbnail?.imageUrl ?? null,
-        }
-    }
-}
-
-export function getIndentificationInfo(item) {
+export async function getMarketInfo(item) {
     return {
-        id: item.id,
-        name: item.name,
-    }
+        ID: item.id,
+        Name: item.name,
+        Price: item.price,
+        CreatorType: item.creatorType || "Unknown",
+        CreatorID: item.creatorTargetId || null,
+        Thumbnail: await getThumbnail(item.id, "Asset"),
+    };
+}
+
+export async function getIdentificationInfo(item) {
+    return {
+        ID: item.id,
+        Name: item.name,
+        Thumbnail: await getThumbnail(item.id, "Asset"),
+    };
 }
