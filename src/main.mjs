@@ -5,34 +5,33 @@ import Users from "./users.mjs"
 async function getPublicAssets(userId) {
 	const games = await Games.get(userId, CreatorTypes.User)
 	const groups = await Groups.get(userId)
-	const userStoreAssets = await Users.getStoreAssets(userId)
+	const userStoreAssets = await Users.getStoreAssets(userId, "User", userId)
 
 	let result = {
-		UserPasses: [],   // Formerly gamePasses
+		UserPasses: [],
 		UserMerch: userStoreAssets || [],
-
 		GroupPasses: [],
 		GroupMerch: [],
 	}
 
-	// Get gamepasses from personal games
+	// Personal gamepasses
 	for (const game of games) {
-		const gamePasses = await Games.getPasses(game.id)
+		const gamePasses = await Games.getPasses(game.id, "User", userId)
 		result.UserPasses.push(...gamePasses)
 	}
 
-	// For each group the user owns
+	// Group-owned gamepasses and merch
 	for (const group of groups) {
-   	 const groupGames = await Games.get(group.id, CreatorTypes.Group)
-   	 const storeAssets = await Groups.getStoreAssets(group.id) || []
+		const groupGames = await Games.get(group.id, CreatorTypes.Group)
+		const storeAssets = await Groups.getStoreAssets(group.id, "Group", group.id)
 
- 	   for (const game of groupGames) {
-  	      const gamePasses = await Games.getPasses(game.id)
-   	     result.GroupPasses.push(...gamePasses)
-   	 }
+		for (const game of groupGames) {
+			const gamePasses = await Games.getPasses(game.id, "Group", group.id)
+			result.GroupPasses.push(...gamePasses)
+		}
 
-    result.GroupMerch.push(...storeAssets)
-}
+		result.GroupMerch.push(...storeAssets)
+	}
 
 	return result
 }
