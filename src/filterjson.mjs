@@ -30,15 +30,19 @@ export default async function filterJSON(parameters) {
     return results
 }
 
-export function getMarketInfo(item) {
-    return {
-        ID: item.id,
-        Name: item.name,
-        Price: item.price,
-        CreatorType: item.creatorType,
-        CreatorID: item.creatorTargetId,
-        Thumbnail: item.thumbnail?.imageUrl || null,
-    }
+export function getMarketInfo(creatorType, creatorId) {
+    return function(item) {
+        if (!item || typeof item !== "object") return null;
+
+        return {
+            ID: item.id,
+            Name: item.name,
+            Price: item.price,
+            CreatorType: creatorType,
+            CreatorID: creatorId,
+            Thumbnail: item.thumbnail?.imageUrl || null,
+        };
+    };
 }
 
 export function getIdentificationInfo(item) {
