@@ -6,12 +6,10 @@ const router = express.Router();
 
 router.get("/:userId", async (req, res) => {
 	try {
-		const userId = req.params.userId;
-		const data = await Profile.getBadges(userId);
-
+		const result = await Profile.getBadges(req.params.userId);
 		res.json({
-			Count: data.count,
-			List: data.list
+			Count: result.Count,
+			List: result.List
 		});
 	} catch (err) {
 		console.error("[/badges/:userId]", err);
