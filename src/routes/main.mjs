@@ -1,6 +1,9 @@
-import Groups from "./groups.mjs"
-import Games, { CreatorTypes } from "./games.mjs"
-import Users from "./users.mjs"
+// src/routes/main.mjs
+
+import Groups from "../services/groups.mjs"; // ✅ FIXED path
+import Games, { CreatorTypes } from "../services/games.mjs"; // ✅ FIXED path
+import Users from "../services/users.mjs"; // ✅ FIXED path
+
 
 async function getPublicAssets(userId) {
 	const result = {
