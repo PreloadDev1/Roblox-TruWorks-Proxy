@@ -1,47 +1,47 @@
-export default async function filterJSON({ url, filter, exhaust }) {
-	const results = [];
-	let cursor = "";
-	let done = false;
+export default async function FilterJSON({ URL, Filter, Exhaust }) {
+	const Results = [];
+	let Cursor = "";
+	let Done = false;
 
-	while (!done) {
-		const res = await fetch(`${url}&cursor=${cursor}`);
-		if (!res.ok) break;
+	while (!Done) {
+		const Response = await fetch(`${URL}&cursor=${Cursor}`);
+		if (!Response.ok) break;
 
-		const body = await res.json();
-		if (!Array.isArray(body.data)) break;
+		const Body = await Response.json();
+		if (!Array.isArray(Body.data)) break;
 
-		for (const row of body.data) {
-			const result = await filter(row);
-			if (result) results.push(result);
+		for (const Row of Body.data) {
+			const Result = await Filter(Row);
+			if (Result) Results.push(Result);
 		}
 
-		if (exhaust && body.nextPageCursor) {
-			cursor = body.nextPageCursor;
+		if (Exhaust && Body.nextPageCursor) {
+			Cursor = Body.nextPageCursor;
 		} else {
-			done = true;
+			Done = true;
 		}
 	}
 
-	return results;
+	return Results;
 }
 
-export function getMarketInfo(creatorType, creatorId) {
-	return function (item) {
+export function GetMarketInfo(CreatorType, CreatorID) {
+	return function (Item) {
 		return {
-			ID: item.id,
-			Name: item.name,
-			Price: item.price,
-			CreatorType: creatorType,
-			CreatorID: creatorId,
-			Thumbnail: item.thumbnail?.imageUrl || null,
+			ID: Item.id,
+			Name: Item.name,
+			Price: Item.price,
+			CreatorType,
+			CreatorID,
+			Thumbnail: Item.thumbnail?.imageUrl || null
 		};
 	};
 }
 
-export function getIdentificationInfo(item) {
+export function GetIdentificationInfo(Item) {
 	return {
-		ID: item.id,
-		Name: item.name,
-		Thumbnail: item.thumbnail?.imageUrl || null,
+		ID: Item.id,
+		Name: Item.name,
+		Thumbnail: Item.thumbnail?.imageUrl || null
 	};
 }
