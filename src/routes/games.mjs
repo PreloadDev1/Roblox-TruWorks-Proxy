@@ -67,11 +67,11 @@ Games.getPasses = async function (universeId, creatorType, creatorId) {
 	return await filterJSON({
 		url: `https://games.roblox.com/v1/games/${universeId}/game-passes?limit=10&sortOrder=1`,
 		exhaust: true,
-		filter: (pass) => ({
+		filter: async (pass) => ({
 			ID: pass.id,
 			Name: pass.name,
 			Price: pass.price,
-			Thumbnail: pass.thumbnail?.imageUrl || null, // ✅ NEW
+			Thumbnail: pass.thumbnail?.imageUrl || await getThumbnail(pass.id, "Asset"), // ✅ fallback
 			CreatorType: creatorType,
 			CreatorID: creatorId,
 		}),
