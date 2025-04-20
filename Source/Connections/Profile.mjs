@@ -1,19 +1,20 @@
-import express from "express";
-import Profile from "../services/profile.mjs"; // or ../controllers/profile.mjs
+import Express from "express";
+import Profile from "../Services/ProfileService.mjs";
 
-const router = express.Router();
+const Router = Express.Router();
 
-router.get("/:userId", async (req, res) => {
+Router.get("/:UserID", async (Request, Response) => {
 	try {
-		const userId = parseInt(req.params.userId);
-		if (isNaN(userId)) return res.status(400).json({ error: "Invalid User ID" });
+		const UserID = parseInt(Request.params.UserID);
+		if (isNaN(UserID)) return Response.status(400).json({ Error: "Invalid User ID" });
 
-		const profile = await Profile.getPublicAssets(userId);
-		res.json(profile);
-	} catch (err) {
-		console.error("[/profile/:userId] Error fetching profile:", err);
-		res.status(500).json({ error: "Failed to fetch profile data" });
+		const ProfileData = await Profile.GetPublicAssets(UserID);
+		Response.json(ProfileData);
+
+	} catch (Error) {
+		console.error("[/profile/:UserID] Error fetching profile:", Error);
+		Response.status(500).json({ Error: "Failed to fetch profile data" });
 	}
 });
 
-export default router;
+export default Router;
