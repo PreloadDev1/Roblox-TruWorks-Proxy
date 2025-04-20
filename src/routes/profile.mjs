@@ -169,25 +169,32 @@ Profile.getPublicAssets = async function (userId) {
 	result.Badges = badges.List;
 	result.SocialLinks = socialLinks;
 
-	// 🧢 User merch
+	// 🛍️ User Merch
 	const userMerch = await Users.getStoreAssets(userId, CreatorTypes.User, userId);
 	if (Array.isArray(userMerch)) result.UserMerch.push(...userMerch);
 
-	// 🧠 User-owned games
+	// 👤 User Games
 	for (const game of userGames) {
-		const [passes, favorites, devProducts] = await Promise.all([
-			Games.getPasses(game.UniverseID, CreatorTypes.User, userId),
+		const placeId = game.PlaceID;
+
+		const [passes, favorites, devProducts, gameDetails] = await Promise.all([
+			Games.getPasses(placeId, CreatorTypes.User, userId),
 			Profile.getFavoriteCounts(game.UniverseID),
-			Games.getDevProducts(game.UniverseID, CreatorTypes.User, userId),
+			Games.getDevProducts(placeId, CreatorTypes.User, userId),
+			Games.getGameData(placeId)
 		]);
+
+		if (gameDetails) {
+			Object.assign(game, gameDetails);
+		}
 
 		game.Favorites = favorites.favorites;
 		result.Games.push(game);
-		result.UserPasses.push(...passes); // ✅ these are user passes only
+		result.UserPasses.push(...passes);
 		result.DevProducts.push(...devProducts);
 	}
 
-	// 👥 Group-owned stuff
+	// 👥 Group Games & Merch
 	for (const group of userGroups) {
 		const groupId = group.ID;
 
@@ -199,15 +206,22 @@ Profile.getPublicAssets = async function (userId) {
 		if (Array.isArray(groupMerch)) result.GroupMerch.push(...groupMerch);
 
 		for (const game of groupGames) {
-			const [passes, favorites, devProducts] = await Promise.all([
-				Games.getPasses(game.UniverseID, CreatorTypes.Group, groupId),
+			const placeId = game.PlaceID;
+
+			const [passes, favorites, devProducts, gameDetails] = await Promise.all([
+				Games.getPasses(placeId, CreatorTypes.Group, groupId),
 				Profile.getFavoriteCounts(game.UniverseID),
-				Games.getDevProducts(game.UniverseID, CreatorTypes.Group, groupId),
+				Games.getDevProducts(placeId, CreatorTypes.Group, groupId),
+				Games.getGameData(placeId),
 			]);
+
+			if (gameDetails) {
+				Object.assign(game, gameDetails);
+			}
 
 			game.Favorites = favorites.favorites;
 			result.Games.push(game);
-			result.GroupPasses.push(...passes); // ✅ correct here
+			result.GroupPasses.push(...passes);
 			result.DevProducts.push(...devProducts);
 		}
 	}
