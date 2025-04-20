@@ -4,7 +4,7 @@ import Games from "./games.mjs";
 
 const router = express.Router();
 
-import Profile from "./profile.mjs"; // Add this at the top if not already
+import Profile from "./profile.mjs";
 
 function parseDateParts(isoString) {
 	const date = new Date(isoString);
@@ -19,7 +19,6 @@ function parseDateParts(isoString) {
 	};
 }
 
-
 Games.getGame = async function (universeId) {
 	const res = await fetch(`https://games.roblox.com/v1/games?universeIds=${universeId}`);
 	if (!res.ok) return null;
@@ -28,19 +27,20 @@ Games.getGame = async function (universeId) {
 	const game = data?.data?.[0];
 	if (!game) return null;
 
-	// Get full profile of creator
-	const creatorId = game.creator?.id;
-	const creatorType = game.creator?.type; // "User" or "Group"
-	let creatorData = null;
+	let creatorData = {
+		ID: game.creator?.id || null,
+		Username: game.creator?.name || null,
+		DisplayName: null,
+		Description: null,
+		IsBanned: false,
+		IsVerified: false,
+		Created: null
+	};
 
-	if (creatorId && creatorType === "User") {
+	if (game.creator?.type === "User" && game.creator?.id) {
 		try {
-			creatorData = await Profile.getBasicInfo(creatorId);
-		} catch {
-			creatorData = { id: creatorId, name: game.creator?.name };
-		}
-	} else {
-		creatorData = { id: creatorId, name: game.creator?.name, type: creatorType };
+			creatorData = await Profile.getBasicInfo(game.creator.id);
+		} catch {}
 	}
 
 	return {
@@ -50,15 +50,7 @@ Games.getGame = async function (universeId) {
 		CreateVipServersAllowed: game.createVipServersAllowed,
 		Created: parseDateParts(game.created),
 		Updated: parseDateParts(game.updated),
-		Creator: {
-			ID: creatorData.id,
-			Username: creatorData.name || creatorData.username || null,
-			DisplayName: creatorData.displayName || null,
-			IsBanned: creatorData.isBanned || false,
-			IsVerified: creatorData.hasVerifiedBadge || false,
-			Description: creatorData.description || null,
-			Created: creatorData.created || null
-		},
+		Creator: creatorData,
 		Favourites: game.favoritedCount || 0,
 		Genre1: game.genre || "",
 		Genre2: game.genre_L1 || "",
@@ -76,10 +68,9 @@ Games.getGame = async function (universeId) {
 		AvatarType: game.universeAvatarType || "PlayerChoice",
 		Visits: game.visits,
 		UpVotes: game.upVotes || 0,
-		DownVotes: game.downVotes || 0,
+		DownVotes: game.downVotes || 0
 	};
 };
-
 
 
 export default router;
