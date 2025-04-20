@@ -1,119 +1,126 @@
-// src/routes/profile.mjs
-import filterJSON from "../utils/filterjson.mjs";
+import FilterJSON from "../utils/filterjson.mjs";
 import Groups from "./groups.mjs";
 import Games, { CreatorTypes } from "./games.mjs";
 import Users from "./users.mjs";
 
 const Profile = {};
 
-function parseDateParts(dateString) {
-	if (!dateString) return null;
-	const date = new Date(dateString);
+function ParseDateParts(DateString) {
+	if (!DateString) return null;
+
+	const DateObj = new Date(DateString);
 	return {
-		Year: date.getUTCFullYear(),
-		Month: date.getUTCMonth() + 1,
-		Day: date.getUTCDate(),
-		Hour: date.getUTCHours(),
-		Minute: date.getUTCMinutes(),
-		Second: date.getUTCSeconds(),
-		Millisecond: date.getUTCMilliseconds(),
+		Year: DateObj.getUTCFullYear(),
+		Month: DateObj.getUTCMonth() + 1,
+		Day: DateObj.getUTCDate(),
+		Hour: DateObj.getUTCHours(),
+		Minute: DateObj.getUTCMinutes(),
+		Second: DateObj.getUTCSeconds(),
+		Millisecond: DateObj.getUTCMilliseconds()
 	};
 }
 
-Profile.getDevProducts = async function (userId) {
-	const games = await Games.get(userId, "Users");
-	const all = [];
+Profile.GetDevProducts = async function (UserID) {
+	const GamesList = await Games.Get(UserID, CreatorTypes.User);
+	const AllProducts = [];
 
-	for (const game of games) {
-		const devProducts = await Games.getDevProducts(game.UniverseID, "Users", userId);
-		all.push(...devProducts);
+	for (const Game of GamesList) {
+		const DevProducts = await Games.GetDevProducts(Game.UniverseID, CreatorTypes.User, UserID);
+		AllProducts.push(...DevProducts);
 	}
 
-	return all;
+	return AllProducts;
 };
 
-Profile.getBasicInfo = async function (userId) {
-	const res = await fetch(`https://users.roblox.com/v1/users/${userId}`);
-	if (!res.ok) throw new Error("Failed to fetch user profile");
-	const data = await res.json();
+Profile.GetBasicInfo = async function (UserID) {
+	const Res = await fetch(`https://users.roblox.com/v1/users/${UserID}`);
+	if (!Res.ok) throw new Error("Failed to fetch user profile");
+
+	const Data = await Res.json();
+
 	return {
-		UserID: data.id,
-		Username: data.name,
-		DisplayName: data.displayName,
-		Description: data.description,
-		IsBanned: data.isBanned,
-		IsVerified: data.hasVerifiedBadge,
-		Created: parseDateParts(data.created),
+		UserID: Data.id,
+		Username: Data.name,
+		DisplayName: Data.displayName,
+		Description: Data.description,
+		IsBanned: Data.isBanned,
+		IsVerified: Data.hasVerifiedBadge,
+		Created: ParseDateParts(Data.created)
 	};
 };
 
-Profile.getFollowers = async function (userId) {
-	const followers = await filterJSON({
-		url: `https://friends.roblox.com/v1/users/${userId}/followers?limit=100`,
+Profile.GetFollowers = async function (UserID) {
+	const Followers = await FilterJSON({
+		url: `https://friends.roblox.com/v1/users/${UserID}/followers?limit=100`,
 		exhaust: true,
-		filter: async (row) => await Profile.getBasicInfo(row.id),
+		filter: async (Row) => await Profile.GetBasicInfo(Row.id)
 	});
+
 	return {
-		Count: followers.length,
-		List: followers,
+		Count: Followers.length,
+		List: Followers
 	};
 };
 
-Profile.getFollowings = async function (userId) {
-	return await filterJSON({
-		url: `https://friends.roblox.com/v1/users/${userId}/followings?limit=100`,
+Profile.GetFollowings = async function (UserID) {
+	return await FilterJSON({
+		url: `https://friends.roblox.com/v1/users/${UserID}/followings?limit=100`,
 		exhaust: true,
-		filter: async (row) => await Profile.getBasicInfo(row.id),
+		filter: async (Row) => await Profile.GetBasicInfo(Row.id)
 	});
 };
 
-Profile.getFriends = async function (userId) {
-	const friends = await filterJSON({
-		url: `https://friends.roblox.com/v1/users/${userId}/friends`,
+Profile.GetFriends = async function (UserID) {
+	const Friends = await FilterJSON({
+		url: `https://friends.roblox.com/v1/users/${UserID}/friends`,
 		exhaust: false,
-		filter: async (row) => await Profile.getBasicInfo(row.id),
+		filter: async (Row) => await Profile.GetBasicInfo(Row.id)
 	});
+
 	return {
-		count: friends.length,
-		list: friends,
+		Count: Friends.length,
+		List: Friends
 	};
 };
 
-Profile.getBadges = async function (userId) {
-	const badges = await filterJSON({
-		url: `https://badges.roblox.com/v1/users/${userId}/badges?limit=100`,
+Profile.GetBadges = async function (UserID) {
+	const Badges = await FilterJSON({
+		url: `https://badges.roblox.com/v1/users/${UserID}/badges?limit=100`,
 		exhaust: true,
-		filter: (badge) => ({
-			ID: badge.id,
-			Name: badge.name,
-			Description: badge.description,
-			AwardedDate: badge.awardedDate,
-			Thumbnail: badge.imageUrl,
-		}),
+		filter: (Badge) => ({
+			ID: Badge.id,
+			Name: Badge.name,
+			Description: Badge.description,
+			AwardedDate: Badge.awardedDate,
+			Thumbnail: Badge.imageUrl
+		})
 	});
+
 	return {
-		count: badges.length,
-		list: badges,
+		Count: Badges.length,
+		List: Badges
 	};
 };
 
-Profile.getSocialLinks = async function (userId) {
-	const res = await fetch(`https://users.roblox.com/v1/users/${userId}/social-links`);
-	if (!res.ok) return [];
-	const data = await res.json();
-	return data.data || [];
+Profile.GetSocialLinks = async function (UserID) {
+	const Res = await fetch(`https://users.roblox.com/v1/users/${UserID}/social-links`);
+	if (!Res.ok) return [];
+
+	const Data = await Res.json();
+	return Data.data || [];
 };
 
-Profile.getFavoriteCounts = async function (universeId) {
-	const res = await fetch(`https://games.roblox.com/v1/games/${universeId}/votes`);
-	if (!res.ok) return { favorites: 0 };
-	const data = await res.json();
-	return { favorites: data.favoritedCount || 0 };
+Profile.GetFavoriteCounts = async function (UniverseID) {
+	const Res = await fetch(`https://games.roblox.com/v1/games/${UniverseID}/votes`);
+	if (!Res.ok) return { Favourites: 0 };
+
+	const Data = await Res.json();
+	return { Favourites: Data.favoritedCount || 0 };
 };
 
-Profile.getPublicAssets = async function (userId) {
-	const result = {
-		UserID: userId,
+Profile.GetPublicAssets = async function (UserID) {
+	const Result = {
+		UserID,
 		Username: null,
 		DisplayName: null,
 		Description: null,
@@ -136,101 +143,95 @@ Profile.getPublicAssets = async function (userId) {
 		UserMerch: [],
 		GroupMerch: [],
 		DevProducts: [],
-		Games: [],
+		Games: []
 	};
 
 	try {
 		const [
-			basicInfo,
-			followers,
-			friends,
-			following,
-			badges,
-			socialLinks,
-			userGames,
-			userGroupsRaw
+			BasicInfo,
+			Followers,
+			Friends,
+			Following,
+			Badges,
+			SocialLinks,
+			UserGames,
+			UserGroups
 		] = await Promise.all([
-			Profile.getBasicInfo(userId),
-			Profile.getFollowers(userId),
-			Profile.getFriends(userId),
-			Profile.getFollowings(userId),
-			Profile.getBadges(userId),
-			Profile.getSocialLinks(userId),
-			Games.get(userId, CreatorTypes.User),
-			Groups.get(userId),
+			Profile.GetBasicInfo(UserID),
+			Profile.GetFollowers(UserID),
+			Profile.GetFriends(UserID),
+			Profile.GetFollowings(UserID),
+			Profile.GetBadges(UserID),
+			Profile.GetSocialLinks(UserID),
+			Games.Get(UserID, CreatorTypes.User),
+			Groups.Get(UserID)
 		]);
 
-		Object.assign(result, basicInfo);
-		result.FollowerCount = followers?.Count || 0;
-		result.Followers = followers?.List || [];
-		result.FriendsCount = friends?.count || 0;
-		result.Friends = friends?.list || [];
-		result.Following = following || [];
-		result.BadgeCount = badges?.count || 0;
-		result.Badges = badges?.list || [];
-		result.SocialLinks = socialLinks || [];
+		Object.assign(Result, BasicInfo);
 
-		// 🛍️ User Merch
-		const userMerch = await Users.getStoreAssets(userId, CreatorTypes.User, userId);
-		if (Array.isArray(userMerch)) result.UserMerch.push(...userMerch);
+		Result.FollowerCount = Followers?.Count || 0;
+		Result.Followers = Followers?.List || [];
+		Result.FriendsCount = Friends?.Count || 0;
+		Result.Friends = Friends?.List || [];
+		Result.Following = Following || [];
+		Result.BadgeCount = Badges?.Count || 0;
+		Result.Badges = Badges?.List || [];
+		Result.SocialLinks = SocialLinks || [];
 
-		// 👤 User Games
-		for (const game of userGames || []) {
-			const placeId = game.PlaceID;
+		const UserMerch = await Users.GetStoreAssets(UserID, CreatorTypes.User, UserID);
+		if (Array.isArray(UserMerch)) Result.UserMerch.push(...UserMerch);
 
-			const [passes, favorites, devProducts, gameDetails] = await Promise.all([
-				Games.getPasses(placeId, CreatorTypes.User, userId),
-				Profile.getFavoriteCounts(game.UniverseID),
-				Games.getDevProducts(placeId, CreatorTypes.User, userId),
-				Games.getGameData(placeId)
+		for (const Game of UserGames || []) {
+			const PlaceID = Game.PlaceID;
+
+			const [Passes, Favourites, DevProducts, GameDetails] = await Promise.all([
+				Games.GetPasses(PlaceID, CreatorTypes.User, UserID),
+				Profile.GetFavoriteCounts(Game.UniverseID),
+				Games.GetDevProducts(PlaceID, CreatorTypes.User, UserID),
+				Games.GetGameData?.(PlaceID)
 			]);
 
-			if (gameDetails) Object.assign(game, gameDetails);
-			game.Favorites = favorites.favorites || 0;
+			if (GameDetails) Object.assign(Game, GameDetails);
+			Game.Favourites = Favourites.Favourites || 0;
 
-			result.Games.push(game);
-			result.UserPasses.push(...(passes || []));
-			result.DevProducts.push(...(devProducts || []));
+			Result.Games.push(Game);
+			Result.UserPasses.push(...(Passes || []));
+			Result.DevProducts.push(...(DevProducts || []));
 		}
 
-		// 👥 Group Games & Merch
-		const userGroups = userGroupsRaw || [];
-		for (const group of userGroups) {
-			const groupId = group.ID;
+		for (const Group of UserGroups || []) {
+			const GroupID = Group.ID;
 
-			const [groupGames, groupMerch] = await Promise.all([
-				Games.get(groupId, CreatorTypes.Group),
-				Users.getStoreAssets(groupId, CreatorTypes.Group, groupId),
+			const [GroupGames, GroupMerch] = await Promise.all([
+				Games.Get(GroupID, CreatorTypes.Group),
+				Users.GetStoreAssets(GroupID, CreatorTypes.Group, GroupID)
 			]);
 
-			if (Array.isArray(groupMerch)) result.GroupMerch.push(...groupMerch);
+			if (Array.isArray(GroupMerch)) Result.GroupMerch.push(...GroupMerch);
 
-			for (const game of groupGames || []) {
-				const placeId = game.PlaceID;
+			for (const Game of GroupGames || []) {
+				const PlaceID = Game.PlaceID;
 
-				const [passes, favorites, devProducts, gameDetails] = await Promise.all([
-					Games.getPasses(placeId, CreatorTypes.Group, groupId),
-					Profile.getFavoriteCounts(game.UniverseID),
-					Games.getDevProducts(placeId, CreatorTypes.Group, groupId),
-					Games.getGameData(placeId),
+				const [Passes, Favourites, DevProducts, GameDetails] = await Promise.all([
+					Games.GetPasses(PlaceID, CreatorTypes.Group, GroupID),
+					Profile.GetFavoriteCounts(Game.UniverseID),
+					Games.GetDevProducts(PlaceID, CreatorTypes.Group, GroupID),
+					Games.GetGameData?.(PlaceID)
 				]);
 
-				if (gameDetails) Object.assign(game, gameDetails);
-				game.Favorites = favorites.favorites || 0;
+				if (GameDetails) Object.assign(Game, GameDetails);
+				Game.Favourites = Favourites.Favourites || 0;
 
-				result.Games.push(game);
-				result.GroupPasses.push(...(passes || []));
-				result.DevProducts.push(...(devProducts || []));
+				Result.Games.push(Game);
+				Result.GroupPasses.push(...(Passes || []));
+				Result.DevProducts.push(...(DevProducts || []));
 			}
 		}
-
-	} catch (err) {
-		console.error("[getPublicAssets] Error:", err);
+	} catch (Error) {
+		console.error("[GetPublicAssets] Error:", Error);
 	}
 
-	return result;
+	return Result;
 };
-
-
 
 export default Profile;
