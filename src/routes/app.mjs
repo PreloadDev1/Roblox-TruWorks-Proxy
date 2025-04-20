@@ -6,6 +6,7 @@ import Groups from "./groups.mjs";
 
 const router = express.Router();
 
+// 🔹 Public assets for a user (games, passes, merch)
 router.get("/assets/:userId", async (req, res) => {
 	try {
 		const result = await getPublicAssets(req.params.userId);
@@ -16,6 +17,7 @@ router.get("/assets/:userId", async (req, res) => {
 	}
 });
 
+// 🔹 Avatar data
 router.get("/avatar/:userId", async (req, res) => {
 	try {
 		const result = await getAvatarAssets(req.params.userId);
@@ -26,6 +28,7 @@ router.get("/avatar/:userId", async (req, res) => {
 	}
 });
 
+// 🔹 User's games
 router.get("/games/:userId", async (req, res) => {
 	try {
 		const result = await Games.get(req.params.userId, "Users");
@@ -36,6 +39,7 @@ router.get("/games/:userId", async (req, res) => {
 	}
 });
 
+// 🔹 Groups owned by user
 router.get("/groups/:userId", async (req, res) => {
 	try {
 		const result = await Groups.get(req.params.userId);
