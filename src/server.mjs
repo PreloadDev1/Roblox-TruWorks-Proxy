@@ -14,7 +14,6 @@ import friendsRoutes from "./routes/friends.mjs";
 import badgesRoutes from "./routes/badges.mjs";
 import socialsRoutes from "./routes/socials.mjs";
 import thumbnailsRoutes from "./routes/thumbnails.mjs";
-import developerRoutes from "./routes/developer.mjs";
 import appRoutes from "./routes/app.mjs"; // ✅ Proper Router
 
 const app = express();
@@ -29,7 +28,6 @@ app.use("/friends", friendsRoutes);
 app.use("/badges", badgesRoutes);
 app.use("/profile/:userId/socials", socialsRoutes);
 app.use("/thumbnails", thumbnailsRoutes);
-app.use("/developer", developerRoutes);
 app.use("/", appRoutes); // includes /assets, /games/:id, etc.
 
 app.listen(port, () => {
