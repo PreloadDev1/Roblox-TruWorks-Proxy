@@ -1,20 +1,20 @@
-// src/routes/followers.mjs
 import express from "express";
-import Profile from "../services/profile.mjs";
+import Profile from "../Services/ProfileService.mjs";
 
-const router = express.Router();
+const Router = express.Router();
 
-router.get("/:userId", async (req, res) => {
+Router.get("/:UserID", async (req, res) => {
 	try {
-		const result = await Profile.getFollowers(req.params.userId);
+		const Result = await Profile.GetFollowers(req.params.UserID);
+
 		res.json({
-			Count: result.Count,
-			List: result.List
+			Count: Result.Count,
+			List: Result.List
 		});
 	} catch (err) {
-		console.error("[/followers/:userId]", err);
+		console.error("[/followers/:UserID]", err);
 		res.status(500).json({ error: "Failed to fetch followers" });
 	}
 });
 
-export default router;
+export default Router;
