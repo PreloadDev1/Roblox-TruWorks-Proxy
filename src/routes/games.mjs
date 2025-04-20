@@ -108,7 +108,7 @@ Games.get = async function (creatorId, creatorType) {
 
 Games.getPasses = async function (universeId, creatorType, creatorId) {
 	return await filterJSON({
-		url: `https://games.roblox.com/v1/games/${universeId}/game-passes?limit=10&sortOrder=1`,
+		url: `https://games.roblox.com/v1/games/${universeId}/game-passes?limit=100&sortOrder=Asc`,
 		exhaust: true,
 		filter: async (pass) => ({
 			ID: pass.id,
@@ -120,6 +120,7 @@ Games.getPasses = async function (universeId, creatorType, creatorId) {
 		}),
 	});
 };
+
 
 Games.getDevProducts = async function (universeId, creatorType, creatorId) {
 	return await filterJSON({
