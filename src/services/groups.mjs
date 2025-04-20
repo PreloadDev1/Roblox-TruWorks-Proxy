@@ -73,6 +73,39 @@ Groups.get = async function (userId) {
 	return groups;
 };
 
+Groups.getSingle = async function (groupId, ownerId = null) {
+	const res = await fetch(`https://groups.roblox.com/v1/groups/${groupId}`);
+	if (!res.ok) return null;
+
+	const info = await res.json();
+	const games = await Games.get(groupId, CreatorTypes.Group);
+
+	const favorites = games.reduce((sum, g) => sum + (g.Favourites || 0), 0);
+	const activePlayers = games.reduce((sum, g) => sum + (g.ActivePlayers || 0), 0);
+
+	const allPasses = (
+		await Promise.all(
+			games.map(game => Games.getPasses(game.PlaceID, CreatorTypes.Group, groupId))
+		)
+	).flat();
+
+	const merch = await Users.getStoreAssets(groupId, CreatorTypes.Group, groupId);
+
+	return {
+		OwnerID: ownerId,
+		ID: groupId,
+		Name: info.name,
+		OwnerName: info.owner?.username || null,
+		Created: parseDateParts(info.created),
+		Members: info.memberCount || 0,
+		Games: games,
+		ActivePlayers: activePlayers,
+		Favourites: favorites,
+		GamePasses: allPasses,
+		Merch: merch || []
+	};
+};
+
 // Optional utility method for catalog search
 Groups.getStoreAssets = async function (groupId) {
 	const storeAssets = await filterJSON({
