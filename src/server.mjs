@@ -31,6 +31,7 @@ app.use("/profile", profileRoutes);
 app.use("/users", usersRoutes);
 app.use("/thumbnails", thumbnailsRoutes);
 app.use("/assets", mainRoutes);
+
 app.use("/devproducts", devProductsRoutes);
 app.use("/followers", followersRoutes);
 app.use("/friends", friendsRoutes);
