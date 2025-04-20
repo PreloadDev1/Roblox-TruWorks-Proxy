@@ -1,6 +1,6 @@
 // src/routes/game.mjs
 import express from "express";
-import Profile from "./profile.mjs";
+import Profile from "../services/profile.mjs";
 
 const router = express.Router();
 
