@@ -1,27 +1,13 @@
+// src/routes/app.mjs
 import express from "express";
 import getPublicAssets from "./main.mjs";
-import getAvatarAssets from "../services/avatar.mjs";
-import Games from "./games.mjs";
-import Groups from "./groups.mjs";
+import getAvatarAssets from "../services/avatar.mjs"; // ✅ correct
+import Games from "../services/games.mjs";             // ✅ fix: from services
+import Groups from "../services/groups.mjs";           // ✅ fix: from services
 
-const router = express.Router(); // ✅ Router, not app instance
+const router = express.Router();
 
-// 🔹 Public assets for a user (games, passes, merch)
-router.get("/avatar/:userId", async (req, res, next) => {
-	try {
-		const userId = parseInt(req.params.userId);
-		if (isNaN(userId)) throw new Error("Invalid User ID");
-
-		const data = await getAvatarAssets(userId);
-		res.json(data);
-	} catch (err) {
-		console.error("[/avatar/:userId]", err);
-		res.status(500).json({ error: "Failed to get avatar data" });
-	}
-});
-
-
-// 🔹 Avatar data
+// 🔹 Avatar assets (used on character pages)
 router.get("/avatar/:userId", async (req, res) => {
 	try {
 		const result = await getAvatarAssets(req.params.userId);
@@ -32,7 +18,7 @@ router.get("/avatar/:userId", async (req, res) => {
 	}
 });
 
-// 🔹 User's games
+// 🔹 User games
 router.get("/games/:userId", async (req, res) => {
 	try {
 		const result = await Games.get(req.params.userId, "Users");
@@ -43,7 +29,7 @@ router.get("/games/:userId", async (req, res) => {
 	}
 });
 
-// 🔹 Groups owned by user
+// 🔹 User groups
 router.get("/groups/:userId", async (req, res) => {
 	try {
 		const result = await Groups.get(req.params.userId);
@@ -54,4 +40,4 @@ router.get("/groups/:userId", async (req, res) => {
 	}
 });
 
-export default router; // ✅ Must export router not app
+export default router;
