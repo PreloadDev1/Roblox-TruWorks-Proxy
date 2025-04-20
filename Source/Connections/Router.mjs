@@ -1,43 +1,51 @@
-// src/routes/app.mjs
-import express from "express";
-import getPublicAssets from "./main.mjs";
-import getAvatarAssets from "../services/avatar.mjs"; // ✅ correct
-import Games from "../services/games.mjs";             // ✅ fix: from services
-import Groups from "../services/groups.mjs";           // ✅ fix: from services
+import Express from "express";
+import GetPublicAssets from "./Main.mjs";
+import GetAvatarAssets from "../Services/AvatarService.mjs";
+import Games from "../Services/GameService.mjs";
+import Groups from "../Services/GroupService.mjs";
 
-const router = express.Router();
+const Router = Express.Router();
 
-// 🔹 Avatar assets (used on character pages)
-router.get("/avatar/:userId", async (req, res) => {
+Router.get("/avatar/:UserID", async (Request, Response) => {
 	try {
-		const result = await getAvatarAssets(req.params.userId);
-		res.json(result);
-	} catch (err) {
-		console.error("[/avatar/:userId]", err);
-		res.status(500).json({ error: "Failed to fetch avatar data" });
+		const UserID = parseInt(Request.params.UserID);
+		if (isNaN(UserID)) return Response.status(400).json({ Error: "Invalid User ID" });
+
+		const AvatarData = await GetAvatarAssets(UserID);
+		Response.json(AvatarData);
+
+	} catch (Error) {
+		console.error("[/avatar/:UserID]", Error);
+		Response.status(500).json({ Error: "Failed to fetch avatar data" });
 	}
 });
 
-// 🔹 User games
-router.get("/games/:userId", async (req, res) => {
+Router.get("/games/:UserID", async (Request, Response) => {
 	try {
-		const result = await Games.get(req.params.userId, "Users");
-		res.json(result);
-	} catch (err) {
-		console.error("[/games/:userId]", err);
-		res.status(500).json({ error: "Failed to fetch games" });
+		const UserID = parseInt(Request.params.UserID);
+		if (isNaN(UserID)) return Response.status(400).json({ Error: "Invalid User ID" });
+
+		const GameList = await Games.Get(UserID, "Users");
+		Response.json(GameList);
+
+	} catch (Error) {
+		console.error("[/games/:UserID]", Error);
+		Response.status(500).json({ Error: "Failed to fetch games" });
 	}
 });
 
-// 🔹 User groups
-router.get("/groups/:userId", async (req, res) => {
+Router.get("/groups/:UserID", async (Request, Response) => {
 	try {
-		const result = await Groups.get(req.params.userId);
-		res.json(result);
-	} catch (err) {
-		console.error("[/groups/:userId]", err);
-		res.status(500).json({ error: "Failed to fetch groups" });
+		const UserID = parseInt(Request.params.UserID);
+		if (isNaN(UserID)) return Response.status(400).json({ Error: "Invalid User ID" });
+
+		const GroupList = await Groups.Get(UserID);
+		Response.json(GroupList);
+
+	} catch (Error) {
+		console.error("[/groups/:UserID]", Error);
+		Response.status(500).json({ Error: "Failed to fetch groups" });
 	}
 });
 
-export default router;
+export default Router;
