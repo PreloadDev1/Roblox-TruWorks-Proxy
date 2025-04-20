@@ -1,15 +1,16 @@
-// src/routes/avatar.mjs
 import express from "express";
-import getAvatarAssets from "../services/avatar.mjs";
+import GetAvatarAssets from "../Services/AvatarService.mjs";
 
 const router = express.Router();
 
 router.get("/:userId", async (req, res) => {
 	try {
 		const userId = parseInt(req.params.userId);
-		if (isNaN(userId)) return res.status(400).json({ error: "Invalid user ID" });
+		if (isNaN(userId)) {
+			return res.status(400).json({ error: "Invalid user ID" });
+		}
 
-		const assets = await getAvatarAssets(userId);
+		const assets = await GetAvatarAssets(userId);
 		res.json(assets);
 	} catch (err) {
 		console.error("[/avatar/:userId]", err);
