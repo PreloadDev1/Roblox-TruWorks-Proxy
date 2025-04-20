@@ -169,11 +169,11 @@ Profile.getPublicAssets = async function (userId) {
 	result.Badges = badges.List;
 	result.SocialLinks = socialLinks;
 
-	// 🧩 User merch
+	// 🧢 User merch
 	const userMerch = await Users.getStoreAssets(userId, CreatorTypes.User, userId);
 	if (Array.isArray(userMerch)) result.UserMerch.push(...userMerch);
 
-	// 🧩 User-owned games, passes, dev products
+	// 🧠 User-owned games
 	for (const game of userGames) {
 		const [passes, favorites, devProducts] = await Promise.all([
 			Games.getPasses(game.UniverseID, CreatorTypes.User, userId),
@@ -183,17 +183,17 @@ Profile.getPublicAssets = async function (userId) {
 
 		game.Favorites = favorites.favorites;
 		result.Games.push(game);
-		result.UserPasses.push(...passes); // ✅ correct destination
+		result.UserPasses.push(...passes);
 		result.DevProducts.push(...devProducts);
 	}
 
-	// 🧩 Group-owned games, passes, merch, dev products
+	// 👥 Group-owned stuff
 	for (const group of userGroups) {
 		const groupId = group.ID;
 
 		const [groupGames, groupMerch] = await Promise.all([
 			Games.get(groupId, CreatorTypes.Group),
-			Users.getStoreAssets(groupId, CreatorTypes.Group, groupId)
+			Users.getStoreAssets(groupId, CreatorTypes.Group, groupId),
 		]);
 
 		if (Array.isArray(groupMerch)) result.GroupMerch.push(...groupMerch);
@@ -207,7 +207,7 @@ Profile.getPublicAssets = async function (userId) {
 
 			game.Favorites = favorites.favorites;
 			result.Games.push(game);
-			result.GroupPasses.push(...passes); // ✅ correct destination
+			result.GroupPasses.push(...passes); // ✅ make sure this gets stored now
 			result.DevProducts.push(...devProducts);
 		}
 	}
