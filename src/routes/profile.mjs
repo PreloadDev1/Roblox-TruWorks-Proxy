@@ -20,6 +20,18 @@ function parseDateParts(dateString) {
 	};
 }
 
+Profile.getDevProducts = async function (userId) {
+	const games = await Games.get(userId, "Users");
+	const all = [];
+
+	for (const game of games) {
+		const devProducts = await Games.getDevProducts(game.UniverseID, "Users", userId);
+		all.push(...devProducts);
+	}
+
+	return all;
+};
+
 Profile.getBasicInfo = async function (userId) {
 	const res = await fetch(`https://users.roblox.com/v1/users/${userId}`);
 	if (!res.ok) throw new Error("Failed to fetch user profile");
