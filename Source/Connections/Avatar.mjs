@@ -1,21 +1,22 @@
 import express from "express";
 import GetAvatarAssets from "../Services/AvatarService.mjs";
 
-const router = express.Router();
+const Router = express.Router();
 
-router.get("/:userId", async (req, res) => {
+Router.get("/:UserID", async (req, res) => {
 	try {
-		const userId = parseInt(req.params.userId);
-		if (isNaN(userId)) {
-			return res.status(400).json({ error: "Invalid user ID" });
+		const UserID = parseInt(req.params.UserID);
+
+		if (isNaN(UserID)) {
+			return res.status(400).json({ error: "Invalid User ID" });
 		}
 
-		const assets = await GetAvatarAssets(userId);
-		res.json(assets);
+		const Assets = await GetAvatarAssets(UserID);
+		res.json(Assets);
 	} catch (err) {
-		console.error("[/avatar/:userId]", err);
+		console.error("[/avatar/:UserID]", err);
 		res.status(500).json({ error: "Failed to fetch avatar assets" });
 	}
 });
 
-export default router;
+export default Router;
