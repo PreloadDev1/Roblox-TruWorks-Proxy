@@ -13,6 +13,7 @@ import badgesRoutes from "./routes/badges.mjs";
 import socialsRoutes from "./routes/socials.mjs";
 import thumbnailsRoutes from "./routes/thumbnails.mjs";
 import groupRoutes from "./routes/group.mjs";
+import gameRoutes from "./routes/game.mjs";
 import appRoutes from "./routes/app.mjs";
 
 // ✅ NEW ROUTES:
@@ -34,6 +35,7 @@ app.use("/thumbnails", thumbnailsRoutes);
 app.use("/group", groupRoutes);     // ✅ NEW
 app.use("/game", gameRoutes);       // ✅ NEW
 app.use("/group", groupRoutes);
+app.use("/game", gameRoutes);
 app.use("/", appRoutes);            // ✅ general tools like /assets, /avatar, /games, /groups
 
 app.listen(port, () => {
