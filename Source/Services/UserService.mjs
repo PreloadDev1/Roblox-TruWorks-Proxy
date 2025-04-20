@@ -1,12 +1,12 @@
-import filterJSON, { getMarketInfo } from "../utils/filterjson.mjs";
+import FilterJSON, { GetMarketInfo } from "../utils/filterjson.mjs";
 
 const Users = {};
 
-Users.getStoreAssets = async function(userId, creatorType, creatorId) {
-	return await filterJSON({
-		url: `https://catalog.roblox.com/v1/search/items/details?CreatorTargetId=${userId}&CreatorType=1&Limit=30`,
-		exhaust: true,
-		filter: getMarketInfo(creatorType, creatorId),
+Users.GetStoreAssets = async function (UserID, CreatorType, CreatorID) {
+	return await FilterJSON({
+		URL: `https://catalog.roblox.com/v1/search/items/details?CreatorTargetId=${UserID}&CreatorType=1&Limit=30`,
+		Exhaust: true,
+		Filter: GetMarketInfo(CreatorType, CreatorID)
 	});
 };
 
