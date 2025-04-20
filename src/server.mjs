@@ -5,8 +5,6 @@ import cors from "cors";
 
 // ✅ Routers
 import avatarRoutes from "./routes/avatar.mjs";
-import gamesRoutes from "./routes/games.mjs";      // if still used
-import groupsRoutes from "./routes/groups.mjs";    // if still used
 import profileRoutes from "./routes/profile.mjs";
 import devProductsRoutes from "./routes/devproducts.mjs";
 import followersRoutes from "./routes/followers.mjs";
@@ -25,8 +23,6 @@ app.use(cors());
 
 // ✅ Route mounts
 app.use("/avatar", avatarRoutes);                  // optional, unless it's handled in appRoutes
-app.use("/games", gamesRoutes);                    // legacy / fallback
-app.use("/groups", groupsRoutes);                  // legacy / fallback
 app.use("/profile", profileRoutes);
 app.use("/devproducts", devProductsRoutes);
 app.use("/followers", followersRoutes);
