@@ -1,13 +1,14 @@
 import express from "express";
-import getPublicAssets from "../main.mjs";
-import getAvatarAssets from "../avatar.mjs";
-import Games from "../games.mjs";
-import Groups from "../groups.mjs";
+import getPublicAssets from "./main.mjs";
+import getAvatarAssets from "./avatar.mjs";
+import Games from "./games.mjs";
+import Groups from "./groups.mjs";
 
-const router = express.Router();
+const app = express();
+const PORT = process.env.PORT || 3000;
 
 // 🔹 Public assets for a user (games, passes, merch)
-router.get("/assets/:userId", async (req, res) => {
+app.get("/assets/:userId", async (req, res) => {
 	try {
 		const result = await getPublicAssets(req.params.userId);
 		res.json(result);
@@ -18,7 +19,7 @@ router.get("/assets/:userId", async (req, res) => {
 });
 
 // 🔹 Avatar data
-router.get("/avatar/:userId", async (req, res) => {
+app.get("/avatar/:userId", async (req, res) => {
 	try {
 		const result = await getAvatarAssets(req.params.userId);
 		res.json(result);
@@ -29,7 +30,7 @@ router.get("/avatar/:userId", async (req, res) => {
 });
 
 // 🔹 User's games
-router.get("/games/:userId", async (req, res) => {
+app.get("/games/:userId", async (req, res) => {
 	try {
 		const result = await Games.get(req.params.userId, "Users");
 		res.json(result);
@@ -40,7 +41,7 @@ router.get("/games/:userId", async (req, res) => {
 });
 
 // 🔹 Groups owned by user
-router.get("/groups/:userId", async (req, res) => {
+app.get("/groups/:userId", async (req, res) => {
 	try {
 		const result = await Groups.get(req.params.userId);
 		res.json(result);
@@ -50,5 +51,9 @@ router.get("/groups/:userId", async (req, res) => {
 	}
 });
 
-export default router;
+app.listen(PORT, () => {
+	console.log("✅ Proxy running on port", PORT);
+});
+
+export default app;
 
