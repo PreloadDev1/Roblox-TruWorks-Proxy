@@ -1,4 +1,4 @@
-// src/routes/games.mjs
+// src/services/games.mjs
 import filterJSON from "../utils/filterjson.mjs";
 import { getThumbnail } from "./thumbnails.mjs";
 import Profile from "../services/profile.mjs";
