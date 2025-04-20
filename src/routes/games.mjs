@@ -1,7 +1,7 @@
 // src/routes/games.mjs
 import filterJSON from "../utils/filterjson.mjs";
 import { getThumbnail } from "./thumbnails.mjs";
-import Profile from "./profile.mjs";
+import Profile from "../services/profile.mjs";
 
 const Games = {};
 
