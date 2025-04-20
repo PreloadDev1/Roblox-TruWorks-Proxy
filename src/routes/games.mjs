@@ -8,38 +8,19 @@ const CreatorTypes = {
 	Group: "Groups",
 };
 
-function formatDate(dateString) {
-	const date = new Date(dateString);
-	return {
-		Year: date.getUTCFullYear(),
-		Month: date.getUTCMonth() + 1,
-		Day: date.getUTCDate(),
-		Hour: date.getUTCHours(),
-		Minute: date.getUTCMinutes(),
-		Second: date.getUTCSeconds(),
-		Millisecond: date.getUTCMilliseconds(),
-	};
-}
-
 Games.get = async function (creatorId, creatorType) {
-	const creatorTypeUris = {
-		[CreatorTypes.User]: "users",
-		[CreatorTypes.Group]: "groups",
-	};
-
-	const creatorTypeUri = creatorTypeUris[creatorType];
-	if (!creatorTypeUri) throw new Error("Unknown creator type");
+	const uri = creatorType === CreatorTypes.User ? "users" : "groups";
 
 	const games = await filterJSON({
-		url: `https://games.roblox.com/v2/${creatorTypeUri}/${creatorId}/games?accessFilter=2&limit=50&sortOrder=Asc`,
+		url: `https://games.roblox.com/v2/${uri}/${creatorId}/games?accessFilter=2&limit=50&sortOrder=Asc`,
 		exhaust: true,
 		filter: (game) => ({
 			ID: game.id,
 			Name: game.name,
-			Thumbnail: null,
 			PlaceID: game.rootPlace?.id,
-			Created: formatDate(game.created),
-			Updated: formatDate(game.updated),
+			Thumbnail: null,
+			Created: parseDate(game.created),
+			Updated: parseDate(game.updated),
 			Active: game.playing,
 			Visits: game.visits,
 			MaxPlayers: game.maxPlayers,
@@ -49,19 +30,26 @@ Games.get = async function (creatorId, creatorType) {
 		}),
 	});
 
-	const thumbnails = await Games.getThumbnails(games.map(g => g.UniverseID));
+	const thumbs = await Games.getThumbnails(games.map(g => g.UniverseID));
 	for (const game of games) {
-		const thumb = thumbnails.find(t => t.UniverseID === game.UniverseID);
+		const thumb = thumbs.find(t => t.UniverseID === game.UniverseID);
 		game.Thumbnail = thumb?.Thumbnail || null;
 	}
 
 	return games;
 };
 
+Games.getGame = async function (universeId) {
+	const res = await fetch(`https://games.roblox.com/v1/games?universeIds=${universeId}`);
+	const data = await res.json();
+	return data.data?.[0] || null;
+};
+
 Games.getThumbnails = async function (universeIds = []) {
 	if (universeIds.length === 0) return [];
-	const idsParam = universeIds.join(",");
-	const res = await fetch(`https://thumbnails.roblox.com/v1/games/icons?universeIds=${idsParam}&size=150x150&format=Png&isCircular=false`);
+
+	const ids = universeIds.join(",");
+	const res = await fetch(`https://thumbnails.roblox.com/v1/games/icons?universeIds=${ids}&size=150x150&format=Png&isCircular=false`);
 	const data = await res.json();
 	return data.data.map(item => ({
 		UniverseID: item.targetId,
@@ -103,6 +91,19 @@ Games.getDevProducts = async function (universeId, creatorType, creatorId) {
 		}),
 	});
 };
+
+function parseDate(isoString) {
+	const date = new Date(isoString);
+	return {
+		Year: date.getUTCFullYear(),
+		Month: date.getUTCMonth() + 1,
+		Day: date.getUTCDate(),
+		Hour: date.getUTCHours(),
+		Minute: date.getUTCMinutes(),
+		Second: date.getUTCSeconds(),
+		Millisecond: date.getUTCMilliseconds(),
+	};
+}
 
 export default Games;
 export { CreatorTypes };
