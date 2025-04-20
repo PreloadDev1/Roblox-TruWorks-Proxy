@@ -79,17 +79,19 @@ Games.getPasses = async function (universeId, creatorType, creatorId) {
 };
 
 Games.getDevProducts = async function (universeId, creatorType, creatorId) {
-	return await filterJSON({
+	const devProducts = await filterJSON({
 		url: `https://games.roblox.com/v1/games/${universeId}/developer-products?limit=50`,
 		exhaust: true,
-		filter: (product) => ({
+		filter: async (product) => ({
 			ID: product.id,
 			Name: product.name,
 			Price: product.priceInRobux,
 			CreatorType: creatorType,
 			CreatorID: creatorId,
+			Thumbnail: await getThumbnail(product.id, "Asset"), // ✅
 		}),
 	});
+	return devProducts;
 };
 
 function parseDate(isoString) {
