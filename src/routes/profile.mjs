@@ -184,7 +184,6 @@ Profile.getPublicAssets = async function (userId) {
 		game.Favorites = favorites.favorites;
 		result.Games.push(game);
 		result.UserPasses.push(...passes);
-                result.GroupPasses.push(...passes);
 		result.DevProducts.push(...devProducts);
 	}
 
@@ -208,7 +207,7 @@ Profile.getPublicAssets = async function (userId) {
 
 			game.Favorites = favorites.favorites;
 			result.Games.push(game);
-			result.GroupPasses.push(...passes); // ✅ make sure this gets stored now
+			result.GroupPasses.push(...passes);
 			result.DevProducts.push(...devProducts);
 		}
 	}
