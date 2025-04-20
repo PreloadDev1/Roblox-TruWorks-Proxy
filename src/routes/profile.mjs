@@ -1,4 +1,4 @@
-import filterJSON, { getIdentificationInfo } from "./filterjson.mjs";
+import filterJSON, { getIdentificationInfo } from "../utils/filterjson.mjs";
 import Groups from "./groups.mjs";
 import Games, { CreatorTypes } from "./games.mjs";
 import Users from "./users.mjs";
