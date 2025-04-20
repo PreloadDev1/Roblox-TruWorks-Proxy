@@ -71,7 +71,7 @@ Games.getPasses = async function (universeId, creatorType, creatorId) {
 			ID: pass.id,
 			Name: pass.name,
 			Price: pass.price,
-			Thumbnail: pass.thumbnail?.imageUrl || null,
+			Thumbnail: pass.thumbnail?.imageUrl || null, // ✅ NEW
 			CreatorType: creatorType,
 			CreatorID: creatorId,
 		}),
