@@ -1,6 +1,6 @@
 import express from "express";
 import getPublicAssets from "./main.mjs";
-import getAvatarAssets from "./avatar.mjs";
+import getAvatarAssets from "../services/avatar.mjs";
 import Games from "./games.mjs";
 import Groups from "./groups.mjs";
 
