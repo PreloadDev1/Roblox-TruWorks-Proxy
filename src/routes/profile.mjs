@@ -1,4 +1,5 @@
 // src/routes/profile.mjs
+
 import filterJSON, { getIdentificationInfo } from "../utils/filterjson.mjs";
 import Groups from "./groups.mjs";
 import Games, { CreatorTypes } from "./games.mjs";
@@ -20,6 +21,7 @@ function parseDateParts(dateString) {
 
 const Profile = {};
 
+// Basic user info, returning expected structured format
 Profile.getBasicInfo = async function (userId) {
 	const res = await fetch(`https://users.roblox.com/v1/users/${userId}`);
 	if (!res.ok) throw new Error("Failed to fetch user profile");
@@ -36,6 +38,7 @@ Profile.getBasicInfo = async function (userId) {
 	};
 };
 
+// Social / friend data
 Profile.getFollowers = async function (userId) {
 	const followers = await filterJSON({
 		url: `https://friends.roblox.com/v1/users/${userId}/followers?limit=100`,
@@ -100,6 +103,7 @@ Profile.getFavoriteCounts = async function (universeId) {
 	return { favorites: data.favoritedCount || 0 };
 };
 
+// Full unified public profile fetcher
 Profile.getPublicAssets = async function (userId) {
 	const result = {
 		UserID: userId,
@@ -125,7 +129,7 @@ Profile.getPublicAssets = async function (userId) {
 		UserMerch: [],
 		GroupMerch: [],
 		DevProducts: [],
-		Games: []
+		Games: [],
 	};
 
 	const [
@@ -158,9 +162,11 @@ Profile.getPublicAssets = async function (userId) {
 	result.Badges = badges.list;
 	result.SocialLinks = socialLinks;
 
+	// User Merch
 	const userMerch = await Users.getStoreAssets(userId, CreatorTypes.User, userId);
 	if (Array.isArray(userMerch)) result.UserMerch.push(...userMerch);
 
+	// User-owned Games
 	for (const game of userGames) {
 		const [passes, favorites, devProducts] = await Promise.all([
 			Games.getPasses(game.UniverseID, CreatorTypes.User, userId),
@@ -174,6 +180,7 @@ Profile.getPublicAssets = async function (userId) {
 		result.DevProducts.push(...devProducts);
 	}
 
+	// Group Data
 	for (const group of userGroups) {
 		result.Games.push(...group.Games);
 		result.GroupPasses.push(...group.GamePasses);
