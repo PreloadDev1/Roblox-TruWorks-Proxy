@@ -1,20 +1,20 @@
-// src/routes/badges.mjs
 import express from "express";
-import Profile from "../services/profile.mjs";
+import Profile from "../Services/ProfileService.mjs";
 
-const router = express.Router();
+const Router = express.Router();
 
-router.get("/:userId", async (req, res) => {
+Router.get("/:UserID", async (req, res) => {
 	try {
-		const result = await Profile.getBadges(req.params.userId);
+		const Result = await Profile.GetBadges(req.params.UserID);
+
 		res.json({
-			Count: result.Count,
-			List: result.List
+			Count: Result.Count,
+			List: Result.List
 		});
 	} catch (err) {
-		console.error("[/badges/:userId]", err);
+		console.error("[/badges/:UserID]", err);
 		res.status(500).json({ error: "Failed to fetch badges" });
 	}
 });
 
-export default router;
+export default Router;
