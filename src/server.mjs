@@ -9,7 +9,6 @@ import groupsRoutes from "./routes/groups.mjs";
 import profileRoutes from "./routes/profile.mjs";
 import usersRoutes from "./routes/users.mjs";
 import thumbnailsRoutes from "./routes/thumbnails.mjs";
-import mainRoutes from "./routes/main.mjs";
 
 import devProductsRoutes from "./routes/devproducts.mjs";
 import followersRoutes from "./routes/followers.mjs";
@@ -30,8 +29,7 @@ app.use("/groups", groupsRoutes);
 app.use("/profile", profileRoutes);
 app.use("/users", usersRoutes);
 app.use("/thumbnails", thumbnailsRoutes);
-app.use("/assets", mainRoutes);
-
+app.use("/assets", appRoutes); // main.mjs = appRoutes
 app.use("/devproducts", devProductsRoutes);
 app.use("/followers", followersRoutes);
 app.use("/friends", friendsRoutes);
