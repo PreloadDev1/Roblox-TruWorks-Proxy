@@ -139,95 +139,98 @@ Profile.getPublicAssets = async function (userId) {
 		Games: [],
 	};
 
-	const [
-		basicInfo,
-		followers,
-		friends,
-		following,
-		badges,
-		socialLinks,
-		userGames,
-		userGroups
-	] = await Promise.all([
-		Profile.getBasicInfo(userId),
-		Profile.getFollowers(userId),
-		Profile.getFriends(userId),
-		Profile.getFollowings(userId),
-		Profile.getBadges(userId),
-		Profile.getSocialLinks(userId),
-		Games.get(userId, CreatorTypes.User),
-		Groups.get(userId),
-	]);
-
-	Object.assign(result, basicInfo);
-	result.FollowerCount = followers.Count;
-	result.Followers = followers.List;
-	result.FriendsCount = friends.Count;
-	result.Friends = friends.List;
-	result.Following = following;
-	result.BadgeCount = badges.Count;
-	result.Badges = badges.List;
-	result.SocialLinks = socialLinks;
-
-	// 🛍️ User Merch
-	const userMerch = await Users.getStoreAssets(userId, CreatorTypes.User, userId);
-	if (Array.isArray(userMerch)) result.UserMerch.push(...userMerch);
-
-	// 👤 User Games
-	for (const game of userGames) {
-		const placeId = game.PlaceID;
-
-		const [passes, favorites, devProducts, gameDetails] = await Promise.all([
-			Games.getPasses(placeId, CreatorTypes.User, userId),
-			Profile.getFavoriteCounts(game.UniverseID),
-			Games.getDevProducts(placeId, CreatorTypes.User, userId),
-			Games.getGameData(placeId)
+	try {
+		const [
+			basicInfo,
+			followers,
+			friends,
+			following,
+			badges,
+			socialLinks,
+			userGames,
+			userGroupsRaw
+		] = await Promise.all([
+			Profile.getBasicInfo(userId),
+			Profile.getFollowers(userId),
+			Profile.getFriends(userId),
+			Profile.getFollowings(userId),
+			Profile.getBadges(userId),
+			Profile.getSocialLinks(userId),
+			Games.get(userId, CreatorTypes.User),
+			Groups.get(userId),
 		]);
 
-		if (gameDetails) {
-			Object.assign(game, gameDetails);
-		}
+		Object.assign(result, basicInfo);
+		result.FollowerCount = followers?.Count || 0;
+		result.Followers = followers?.List || [];
+		result.FriendsCount = friends?.count || 0;
+		result.Friends = friends?.list || [];
+		result.Following = following || [];
+		result.BadgeCount = badges?.count || 0;
+		result.Badges = badges?.list || [];
+		result.SocialLinks = socialLinks || [];
 
-		game.Favorites = favorites.favorites;
-		result.Games.push(game);
-		result.UserPasses.push(...passes);
-		result.DevProducts.push(...devProducts);
-	}
+		// 🛍️ User Merch
+		const userMerch = await Users.getStoreAssets(userId, CreatorTypes.User, userId);
+		if (Array.isArray(userMerch)) result.UserMerch.push(...userMerch);
 
-	// 👥 Group Games & Merch
-	for (const group of userGroups) {
-		const groupId = group.ID;
-
-		const [groupGames, groupMerch] = await Promise.all([
-			Games.get(groupId, CreatorTypes.Group),
-			Users.getStoreAssets(groupId, CreatorTypes.Group, groupId),
-		]);
-
-		if (Array.isArray(groupMerch)) result.GroupMerch.push(...groupMerch);
-
-		for (const game of groupGames) {
+		// 👤 User Games
+		for (const game of userGames || []) {
 			const placeId = game.PlaceID;
 
 			const [passes, favorites, devProducts, gameDetails] = await Promise.all([
-				Games.getPasses(placeId, CreatorTypes.Group, groupId),
+				Games.getPasses(placeId, CreatorTypes.User, userId),
 				Profile.getFavoriteCounts(game.UniverseID),
-				Games.getDevProducts(placeId, CreatorTypes.Group, groupId),
-				Games.getGameData(placeId),
+				Games.getDevProducts(placeId, CreatorTypes.User, userId),
+				Games.getGameData(placeId)
 			]);
 
-			if (gameDetails) {
-				Object.assign(game, gameDetails);
-			}
+			if (gameDetails) Object.assign(game, gameDetails);
+			game.Favorites = favorites.favorites || 0;
 
-			game.Favorites = favorites.favorites;
 			result.Games.push(game);
-			result.GroupPasses.push(...passes);
-			result.DevProducts.push(...devProducts);
+			result.UserPasses.push(...(passes || []));
+			result.DevProducts.push(...(devProducts || []));
 		}
+
+		// 👥 Group Games & Merch
+		const userGroups = userGroupsRaw || [];
+		for (const group of userGroups) {
+			const groupId = group.ID;
+
+			const [groupGames, groupMerch] = await Promise.all([
+				Games.get(groupId, CreatorTypes.Group),
+				Users.getStoreAssets(groupId, CreatorTypes.Group, groupId),
+			]);
+
+			if (Array.isArray(groupMerch)) result.GroupMerch.push(...groupMerch);
+
+			for (const game of groupGames || []) {
+				const placeId = game.PlaceID;
+
+				const [passes, favorites, devProducts, gameDetails] = await Promise.all([
+					Games.getPasses(placeId, CreatorTypes.Group, groupId),
+					Profile.getFavoriteCounts(game.UniverseID),
+					Games.getDevProducts(placeId, CreatorTypes.Group, groupId),
+					Games.getGameData(placeId),
+				]);
+
+				if (gameDetails) Object.assign(game, gameDetails);
+				game.Favorites = favorites.favorites || 0;
+
+				result.Games.push(game);
+				result.GroupPasses.push(...(passes || []));
+				result.DevProducts.push(...(devProducts || []));
+			}
+		}
+
+	} catch (err) {
+		console.error("[getPublicAssets] Error:", err);
 	}
 
 	return result;
 };
+
 
 
 export default Profile;
