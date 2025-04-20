@@ -11,7 +11,6 @@ import followersRoutes from "./routes/followers.mjs";
 import friendsRoutes from "./routes/friends.mjs";
 import badgesRoutes from "./routes/badges.mjs";
 import socialsRoutes from "./routes/socials.mjs";
-import thumbnailsRoutes from "./routes/thumbnails.mjs";
 import groupRoutes from "./routes/group.mjs";      // NEW: single group
 import gameRoutes from "./routes/game.mjs";        // NEW: single game
 import appRoutes from "./routes/app.mjs";          // general tools like /avatar/:id, /assets/:id, etc.
@@ -29,7 +28,6 @@ app.use("/followers", followersRoutes);
 app.use("/friends", friendsRoutes);
 app.use("/badges", badgesRoutes);
 app.use("/profile/:userId/socials", socialsRoutes);
-app.use("/thumbnails", thumbnailsRoutes);
 app.use("/group", groupRoutes);                    // ✅ Single group info: /group/:id
 app.use("/game", gameRoutes);                      // ✅ Single game info: /game/:id
 app.use("/", appRoutes);                           // ✅ universal endpoints like /assets/:id
