@@ -12,6 +12,8 @@ import followersRoutes from "./routes/followers.mjs";
 import friendsRoutes from "./routes/friends.mjs";
 import badgesRoutes from "./routes/badges.mjs";
 import socialsRoutes from "./routes/socials.mjs";
+import thumbnailsRoutes from "./routes/thumbnails.mjs"; // ✅ Required for /thumbnails
+import appRoutes from "./routes/app.mjs";               // ✅ Required for /assets
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -29,6 +31,8 @@ app.use("/followers", followersRoutes);
 app.use("/friends", friendsRoutes);
 app.use("/badges", badgesRoutes);
 app.use("/profile/:userId/socials", socialsRoutes);
+app.use("/thumbnails", thumbnailsRoutes); // ✅ Optional but useful
+app.use("/assets", appRoutes);            // ✅ For GetPublicAssets endpoint
 
 // Start server
 app.listen(port, () => {
