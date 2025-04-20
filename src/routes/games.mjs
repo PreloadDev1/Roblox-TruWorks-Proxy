@@ -1,4 +1,4 @@
-import filterJSON from "./filterjson.mjs";
+import filterJSON from "../utils/filterjson.mjs";
 import { getThumbnail } from "./thumbnails.mjs";
 
 const Games = {};
