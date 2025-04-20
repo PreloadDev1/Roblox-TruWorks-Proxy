@@ -8,6 +8,18 @@ const CreatorTypes = {
 	Group: "Groups",
 };
 
+function formatDate(dateString) {
+	const date = new Date(dateString);
+	return {
+		Year: date.getUTCFullYear(),
+		Month: date.getUTCMonth() + 1,
+		Day: date.getUTCDate(),
+		Hour: date.getUTCHours(),
+		Minute: date.getUTCMinutes(),
+		Second: date.getUTCSeconds(),
+	};
+}
+
 Games.get = async function (creatorId, creatorType) {
 	const creatorTypeUris = {
 		[CreatorTypes.User]: "users",
@@ -23,10 +35,10 @@ Games.get = async function (creatorId, creatorType) {
 		filter: (game) => ({
 			ID: game.id,
 			Name: game.name,
-			Thumbnail: null, // Will be injected via getThumbnails
+			Thumbnail: null,
 			PlaceID: game.rootPlace?.id,
-			Created: game.created,
-			Updated: game.updated,
+			Created: formatDate(game.created),
+			Updated: formatDate(game.updated),
 			Active: game.playing,
 			Visits: game.visits,
 			MaxPlayers: game.maxPlayers,
