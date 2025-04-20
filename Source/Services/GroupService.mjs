@@ -1,129 +1,118 @@
-// src/services/groups.mjs
-
-import filterJSON from "../utils/filterjson.mjs";
+import FilterJSON from "../utils/filterjson.mjs";
 import Games, { CreatorTypes } from "./games.mjs";
 import Users from "./users.mjs";
 
-// Parse an ISO date string into structured UTC components
-function parseDateParts(dateString) {
-	if (!dateString) return null;
-	const date = new Date(dateString);
+function ParseDateParts(DateString) {
+	if (!DateString) return null;
+
+	const DateObj = new Date(DateString);
 	return {
-		Year: date.getUTCFullYear(),
-		Month: date.getUTCMonth() + 1,
-		Day: date.getUTCDate(),
-		Hour: date.getUTCHours(),
-		Minute: date.getUTCMinutes(),
-		Second: date.getUTCSeconds(),
-		Millisecond: date.getUTCMilliseconds(),
+		Year: DateObj.getUTCFullYear(),
+		Month: DateObj.getUTCMonth() + 1,
+		Day: DateObj.getUTCDate(),
+		Hour: DateObj.getUTCHours(),
+		Minute: DateObj.getUTCMinutes(),
+		Second: DateObj.getUTCSeconds(),
+		Millisecond: DateObj.getUTCMilliseconds()
 	};
 }
 
 const Groups = {};
 
-// Get groups owned by the user (as full structured objects)
-Groups.get = async function (userId) {
-	const groups = await filterJSON({
-		url: `https://groups.roblox.com/v1/users/${userId}/groups/roles?includeLocked=false`,
+Groups.Get = async function (UserID) {
+	const GroupsList = await FilterJSON({
+		url: `https://groups.roblox.com/v1/users/${UserID}/groups/roles?includeLocked=false`,
 		exhaust: false,
-		filter: async (row) => {
-			const group = row.group;
-			if (!group || !row.role || row.role.rank !== 255) return null;
+		filter: async (Row) => {
+			const Group = Row.group;
+			if (!Group || !Row.role || Row.role.rank !== 255) return null;
 
-			const groupId = group.id;
+			const GroupID = Group.id;
 
-			// Get full group info
-			const res = await fetch(`https://groups.roblox.com/v1/groups/${groupId}`);
-			if (!res.ok) return null;
-			const info = await res.json();
+			const Res = await fetch(`https://groups.roblox.com/v1/groups/${GroupID}`);
+			if (!Res.ok) return null;
 
-			// Get games owned by the group
-			const games = await Games.get(groupId, CreatorTypes.Group);
+			const Info = await Res.json();
+			const GamesList = await Games.Get(GroupID, CreatorTypes.Group);
 
-			// Count totals
-			const favorites = games.reduce((sum, g) => sum + (g.Favourites || 0), 0);
-			const activePlayers = games.reduce((sum, g) => sum + (g.ActivePlayers || 0), 0);
+			const Favourites = GamesList.reduce((Sum, G) => Sum + (G.Favourites || 0), 0);
+			const ActivePlayers = GamesList.reduce((Sum, G) => Sum + (G.ActivePlayers || 0), 0);
 
-			// Get group gamepasses (combined from all games)
-			const allPasses = (
+			const GamePasses = (
 				await Promise.all(
-					games.map(game => Games.getPasses(game.PlaceID, CreatorTypes.Group, groupId))
+					GamesList.map(Game => Games.GetPasses(Game.PlaceID, CreatorTypes.Group, GroupID))
 				)
 			).flat();
 
-			// Group-owned catalog assets
-			const merch = await Users.getStoreAssets(groupId, CreatorTypes.Group, groupId);
+			const Merch = await Users.GetStoreAssets(GroupID, CreatorTypes.Group, GroupID);
 
 			return {
-				OwnerID: userId,
-				ID: groupId,
-				Name: group.name,
-				OwnerName: info.owner?.username || null,
-				Created: parseDateParts(info.created),
-				Members: info.memberCount || 0,
-				Games: games,
-				ActivePlayers: activePlayers,
-				Favourites: favorites,
-				GamePasses: allPasses,
-				Merch: merch || []
+				OwnerID: UserID,
+				ID: GroupID,
+				Name: Group.name,
+				OwnerName: Info.owner?.username || null,
+				Created: ParseDateParts(Info.created),
+				Members: Info.memberCount || 0,
+				Games: GamesList,
+				ActivePlayers,
+				Favourites,
+				GamePasses,
+				Merch: Merch || []
 			};
 		}
 	});
 
-	return groups;
+	return GroupsList;
 };
 
-Groups.getSingle = async function (groupId, ownerId = null) {
-	const res = await fetch(`https://groups.roblox.com/v1/groups/${groupId}`);
-	if (!res.ok) return null;
+Groups.GetSingle = async function (GroupID, OwnerID = null) {
+	const Res = await fetch(`https://groups.roblox.com/v1/groups/${GroupID}`);
+	if (!Res.ok) return null;
 
-	const info = await res.json();
-	const games = await Games.get(groupId, CreatorTypes.Group);
+	const Info = await Res.json();
+	const GamesList = await Games.Get(GroupID, CreatorTypes.Group);
 
-	const favorites = games.reduce((sum, g) => sum + (g.Favourites || 0), 0);
-	const activePlayers = games.reduce((sum, g) => sum + (g.ActivePlayers || 0), 0);
+	const Favourites = GamesList.reduce((Sum, G) => Sum + (G.Favourites || 0), 0);
+	const ActivePlayers = GamesList.reduce((Sum, G) => Sum + (G.ActivePlayers || 0), 0);
 
-	const allPasses = (
+	const GamePasses = (
 		await Promise.all(
-			games.map(game => Games.getPasses(game.PlaceID, CreatorTypes.Group, groupId))
+			GamesList.map(Game => Games.GetPasses(Game.PlaceID, CreatorTypes.Group, GroupID))
 		)
 	).flat();
 
-	const merch = await Users.getStoreAssets(groupId, CreatorTypes.Group, groupId);
+	const Merch = await Users.GetStoreAssets(GroupID, CreatorTypes.Group, GroupID);
 
 	return {
-		OwnerID: ownerId,
-		ID: groupId,
-		Name: info.name,
-		OwnerName: info.owner?.username || null,
-		Created: parseDateParts(info.created),
-		Members: info.memberCount || 0,
-		Games: games,
-		ActivePlayers: activePlayers,
-		Favourites: favorites,
-		GamePasses: allPasses,
-		Merch: merch || []
+		OwnerID,
+		ID: GroupID,
+		Name: Info.name,
+		OwnerName: Info.owner?.username || null,
+		Created: ParseDateParts(Info.created),
+		Members: Info.memberCount || 0,
+		Games: GamesList,
+		ActivePlayers,
+		Favourites,
+		GamePasses,
+		Merch: Merch || []
 	};
 };
 
-// Optional utility method for catalog search
-Groups.getStoreAssets = async function (groupId) {
-	const storeAssets = await filterJSON({
-		url: `https://catalog.roblox.com/v1/search/items?CreatorTargetId=${groupId}&CreatorType=2&Limit=30&SortType=3`,
+Groups.GetStoreAssets = async function (GroupID) {
+	const StoreAssets = await FilterJSON({
+		url: `https://catalog.roblox.com/v1/search/items?CreatorTargetId=${GroupID}&CreatorType=2&Limit=30&SortType=3`,
 		exhaust: true,
-		filter: async function (item) {
-			return {
-				ID: item.id,
-				Name: item.name,
-				Price: item.price,
-				CreatorID: groupId,
-				CreatorType: "Groups",
-				Thumbnail: item.thumbnail?.imageUrl || null
-			};
-		}
+		filter: async (Item) => ({
+			ID: Item.id,
+			Name: Item.name,
+			Price: Item.price,
+			CreatorID: GroupID,
+			CreatorType: "Groups",
+			Thumbnail: Item.thumbnail?.imageUrl || null
+		})
 	});
 
-	return storeAssets;
+	return StoreAssets;
 };
 
 export default Groups;
