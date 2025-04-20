@@ -6,12 +6,10 @@ const router = express.Router();
 
 router.get("/:userId", async (req, res) => {
 	try {
-		const userId = req.params.userId;
-		const data = await Profile.getFriends(userId);
-
+		const result = await Profile.getFriends(req.params.userId);
 		res.json({
-			Count: data.count,
-			List: data.list
+			Count: result.Count,
+			List: result.List
 		});
 	} catch (err) {
 		console.error("[/friends/:userId]", err);
