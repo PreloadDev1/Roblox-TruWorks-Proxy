@@ -17,6 +17,7 @@ function formatDate(dateString) {
 		Hour: date.getUTCHours(),
 		Minute: date.getUTCMinutes(),
 		Second: date.getUTCSeconds(),
+		Millisecond: date.getUTCMilliseconds(),
 	};
 }
 
