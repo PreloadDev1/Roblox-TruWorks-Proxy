@@ -1,17 +1,27 @@
-import express from "express";
-import getAvatarAssets from "../avatar.mjs";
+// src/services/avatar.mjs
+export default async function getAvatarAssets(userId) {
+	const res = await fetch(`https://avatar.roblox.com/v1/users/${userId}/currently-wearing`);
+	const data = await res.json();
 
-const router = express.Router();
+	if (!Array.isArray(data.assetIds)) return [];
 
-router.get("/:userId", async (req, res) => {
-    try {
-        const userId = parseInt(req.params.userId);
-        const assets = await getAvatarAssets(userId);
-        res.json(assets);
-    } catch (err) {
-        console.error("[/avatar/:userId]", err);
-        res.status(500).json({ error: "Failed to fetch avatar data" });
-    }
-});
+	const detailedAssets = await Promise.all(
+		data.assetIds.map(async (assetId) => {
+			try {
+				const response = await fetch(`https://catalog.roblox.com/v1/catalog/items/${assetId}/details`);
+				const assetData = await response.json();
+				return {
+					ID: assetId,
+					Name: assetData.name || null,
+					Type: assetData.assetType || null,
+					Thumbnail: assetData.thumbnailUrl || null
+				};
+			} catch (err) {
+				console.warn("[AvatarAssets] Failed to fetch asset detail for ID:", assetId, err);
+				return null;
+			}
+		})
+	);
 
-export default router;
+	return detailedAssets.filter(asset => asset !== null);
+}
