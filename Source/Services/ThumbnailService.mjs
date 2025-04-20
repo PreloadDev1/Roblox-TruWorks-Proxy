@@ -1,27 +1,29 @@
-// src/routes/thumbnails.mjs
 import express from "express";
-const router = express.Router();
 
-/**
- * Gets a game thumbnail from Universe ID.
- */
-export async function getThumbnail(universeId) {
-	const res = await fetch(`https://thumbnails.roblox.com/v1/games/icons?universeIds=${universeId}&size=150x150&format=Png&isCircular=false`);
-	if (!res.ok) return null;
+const Router = express.Router();
 
-	const data = await res.json();
-	const found = data?.data?.find(t => t.targetId === Number(universeId));
-	return found?.imageUrl || null;
+async function GetThumbnail(UniverseID) {
+	const Res = await fetch(
+		`https://thumbnails.roblox.com/v1/games/icons?universeIds=${UniverseID}&size=150x150&format=Png&isCircular=false`
+	);
+
+	if (!Res.ok) return null;
+
+	const Data = await Res.json();
+	const Found = Data?.data?.find((T) => T.targetId === Number(UniverseID));
+
+	return Found?.imageUrl || null;
 }
 
-// Optional route for testing thumbnail API
-router.get("/game/:universeId", async (req, res) => {
-	const thumbnail = await getThumbnail(req.params.universeId);
-	if (thumbnail) {
-		res.json({ thumbnail });
+Router.get("/game/:universeId", async (Req, Res) => {
+	const Thumbnail = await GetThumbnail(Req.params.universeId);
+
+	if (Thumbnail) {
+		Res.json({ Thumbnail });
 	} else {
-		res.status(404).json({ error: "Thumbnail not found" });
+		Res.status(404).json({ error: "Thumbnail not found" });
 	}
 });
 
-export default router;
+export { GetThumbnail };
+export default Router;
