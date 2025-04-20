@@ -1,66 +1,59 @@
-// src/routes/main.mjs
+import Groups from "../Services/GroupService.mjs";
+import Games, { CreatorTypes } from "../Services/GameService.mjs";
+import Users from "../Services/UserService.mjs";
 
-import Groups from "../services/groups.mjs"; // ✅ FIXED path
-import Games, { CreatorTypes } from "../services/games.mjs"; // ✅ FIXED path
-import Users from "../services/users.mjs"; // ✅ FIXED path
-
-
-async function getPublicAssets(userId) {
-	const result = {
+async function GetPublicAssets(UserID) {
+	const Result = {
 		UserPasses: [],
 		UserMerch: [],
 		GroupPasses: [],
 		GroupMerch: [],
-	}
+	};
 
 	try {
-		// 🧠 Fetch personal games
-		const userGames = await Games.get(userId, CreatorTypes.User)
-		console.log(`[UserGames] ${userGames.length} games found`)
+		const UserGames = await Games.Get(UserID, CreatorTypes.User);
+		console.log(`[UserGames] ${UserGames.length} games found`);
 
-		for (const game of userGames) {
-			if (!game.UniverseID) continue
-			const passes = await Games.getPasses(game.UniverseID, CreatorTypes.User, userId)
-			if (Array.isArray(passes)) {
-				result.UserPasses.push(...passes)
+		for (const Game of UserGames) {
+			if (!Game.UniverseID) continue;
+			const Passes = await Games.GetPasses(Game.UniverseID, CreatorTypes.User, UserID);
+			if (Array.isArray(Passes)) {
+				Result.UserPasses.push(...Passes);
 			}
 		}
 
-		// 🧠 Fetch user-owned items
-		const userItems = await Users.getStoreAssets(userId, CreatorTypes.User, userId)
-		if (Array.isArray(userItems)) {
-			result.UserMerch.push(...userItems)
+		const UserItems = await Users.GetStoreAssets(UserID, CreatorTypes.User, UserID);
+		if (Array.isArray(UserItems)) {
+			Result.UserMerch.push(...UserItems);
 		}
 
-		// 🧠 Fetch groups
-		const groups = await Groups.get(userId)
-		console.log(`[UserGroups] ${groups.length} groups found`)
+		const GroupsOwned = await Groups.Get(UserID);
+		console.log(`[UserGroups] ${GroupsOwned.length} groups found`);
 
-		for (const group of groups) {
-			const groupId = group.ID
-			if (!groupId) continue
+		for (const Group of GroupsOwned) {
+			const GroupID = Group.ID;
+			if (!GroupID) continue;
 
-			// 🔹 Group-owned items
-			const groupItems = await Users.getStoreAssets(groupId, CreatorTypes.Group, groupId)
-			if (Array.isArray(groupItems)) {
-				result.GroupMerch.push(...groupItems)
+			const GroupItems = await Users.GetStoreAssets(GroupID, CreatorTypes.Group, GroupID);
+			if (Array.isArray(GroupItems)) {
+				Result.GroupMerch.push(...GroupItems);
 			}
 
-			// 🔹 Group-owned games → passes
-			const groupGames = await Games.get(groupId, CreatorTypes.Group)
-			for (const game of groupGames) {
-				if (!game.UniverseID) continue
-				const passes = await Games.getPasses(game.UniverseID, CreatorTypes.Group, groupId)
-				if (Array.isArray(passes)) {
-					result.GroupPasses.push(...passes)
+			const GroupGames = await Games.Get(GroupID, CreatorTypes.Group);
+			for (const Game of GroupGames) {
+				if (!Game.UniverseID) continue;
+				const Passes = await Games.GetPasses(Game.UniverseID, CreatorTypes.Group, GroupID);
+				if (Array.isArray(Passes)) {
+					Result.GroupPasses.push(...Passes);
 				}
 			}
 		}
+
 	} catch (err) {
-		console.error("[TruWorks:getPublicAssets] Error:", err)
+		console.error("[TruWorks:GetPublicAssets] Error:", err);
 	}
 
-	return result
+	return Result;
 }
 
-export default getPublicAssets
+export default GetPublicAssets;
