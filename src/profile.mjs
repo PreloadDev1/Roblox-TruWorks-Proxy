@@ -1,15 +1,49 @@
 import filterJSON, { getIdentificationInfo } from "./filterjson.mjs";
-import Groups from "./groups.mjs";
 import Games, { CreatorTypes } from "./games.mjs";
+import Groups from "./groups.mjs";
 import Users from "./users.mjs";
 
 const Profile = {};
 
-// Basic user info
+function parseDateObject(iso) {
+	const d = new Date(iso);
+	return {
+		Year: d.getUTCFullYear(),
+		Month: d.getUTCMonth() + 1,
+		Day: d.getUTCDate(),
+		Hour: d.getUTCHours(),
+		Minute: d.getUTCMinutes(),
+		Second: d.getUTCSeconds(),
+		Millisecond: d.getUTCMilliseconds(),
+	};
+}
+
+// Fetch core profile info
 Profile.getBasicInfo = async function (userId) {
 	const res = await fetch(`https://users.roblox.com/v1/users/${userId}`);
-	if (!res.ok) throw new Error("Failed to fetch user profile");
+	if (!res.ok) throw new Error("Failed to get basic info");
 	return await res.json();
+};
+
+// Social links
+Profile.getSocialLinks = async function (userId) {
+	const res = await fetch(`https://users.roblox.com/v1/users/${userId}/social-links`);
+	if (!res.ok) return [];
+	const data = await res.json();
+	return data.data || [];
+};
+
+// Friends
+Profile.getFriends = async function (userId) {
+	const friends = await filterJSON({
+		url: `https://friends.roblox.com/v1/users/${userId}/friends`,
+		exhaust: false,
+		filter: getIdentificationInfo,
+	});
+	return {
+		count: friends.length,
+		list: friends,
+	};
 };
 
 // Followers
@@ -35,33 +69,12 @@ Profile.getFollowings = async function (userId) {
 	return followings;
 };
 
-// Friends
-Profile.getFriends = async function (userId) {
-	const friends = await filterJSON({
-		url: `https://friends.roblox.com/v1/users/${userId}/friends`,
-		exhaust: false,
-		filter: getIdentificationInfo,
-	});
-	return {
-		count: friends.length,
-		list: friends,
-	};
-};
-
-// Check if userId is following targetId
+// IsFollowing
 Profile.isFollowing = async function (userId, targetId) {
 	const res = await fetch(`https://friends.roblox.com/v1/users/${userId}/followings/${targetId}`);
 	if (!res.ok) return false;
 	const data = await res.json();
 	return data.isFollowing === true;
-};
-
-// Favorite count per game
-Profile.getFavoriteCounts = async function (universeId) {
-	const res = await fetch(`https://games.roblox.com/v1/games/${universeId}/votes`);
-	if (!res.ok) return { favorites: 0 };
-	const data = await res.json();
-	return { favorites: data.favoritedCount || 0 };
 };
 
 // Badges
@@ -73,7 +86,7 @@ Profile.getBadges = async function (userId) {
 			ID: badge.id,
 			Name: badge.name,
 			Description: badge.description,
-			AwardedDate: badge.awardedDate,
+			AwardedDate: parseDateObject(badge.awardedDate),
 			Icon: badge.imageUrl,
 		}),
 	});
@@ -83,15 +96,15 @@ Profile.getBadges = async function (userId) {
 	};
 };
 
-// Social links
-Profile.getSocialLinks = async function (userId) {
-	const res = await fetch(`https://users.roblox.com/v1/users/${userId}/social-links`);
-	if (!res.ok) return [];
+// Game vote data
+Profile.getFavoriteCounts = async function (universeId) {
+	const res = await fetch(`https://games.roblox.com/v1/games/${universeId}/votes`);
+	if (!res.ok) return { favorites: 0 };
 	const data = await res.json();
-	return data.data || [];
+	return { favorites: data.favoritedCount || 0 };
 };
 
-// Main export
+// Main profile aggregation
 Profile.getPublicAssets = async function (userId) {
 	const result = {
 		UserID: userId,
@@ -119,7 +132,7 @@ Profile.getPublicAssets = async function (userId) {
 		Games: [],
 	};
 
-	// Fetch core profile info
+	// Pull in core data
 	const [
 		basicInfo,
 		followers,
@@ -128,7 +141,7 @@ Profile.getPublicAssets = async function (userId) {
 		badges,
 		socialLinks,
 		userGames,
-		userGroups,
+		userGroups
 	] = await Promise.all([
 		Profile.getBasicInfo(userId),
 		Profile.getFollowers(userId),
@@ -140,8 +153,13 @@ Profile.getPublicAssets = async function (userId) {
 		Groups.get(userId),
 	]);
 
-	// Assign identity
 	Object.assign(result, basicInfo);
+
+	// Apply Created date
+	if (basicInfo.created) {
+		result.Created = parseDateObject(basicInfo.created);
+	}
+
 	result.FollowerCount = followers.count;
 	result.Followers = followers.list;
 	result.FriendsCount = friends.count;
@@ -151,11 +169,13 @@ Profile.getPublicAssets = async function (userId) {
 	result.Badges = badges.list;
 	result.SocialLinks = socialLinks;
 
-	// User items
+	// Add user merch
 	const userMerch = await Users.getStoreAssets(userId, CreatorTypes.User, userId);
-	if (Array.isArray(userMerch)) result.UserMerch.push(...userMerch);
+	if (Array.isArray(userMerch)) {
+		result.UserMerch.push(...userMerch);
+	}
 
-	// Games owned by user
+	// Process user games
 	for (const game of userGames) {
 		const [passes, favorites, devProducts] = await Promise.all([
 			Games.getPasses(game.UniverseID, CreatorTypes.User, userId),
@@ -169,13 +189,15 @@ Profile.getPublicAssets = async function (userId) {
 		result.DevProducts.push(...devProducts);
 	}
 
-	// Group-owned content
+	// Process group content
 	for (const group of userGroups) {
 		const groupId = group.ID;
 		const groupGames = await Games.get(groupId, CreatorTypes.Group);
 		const groupMerch = await Users.getStoreAssets(groupId, CreatorTypes.Group, groupId);
 
-		if (Array.isArray(groupMerch)) result.GroupMerch.push(...groupMerch);
+		if (Array.isArray(groupMerch)) {
+			result.GroupMerch.push(...groupMerch);
+		}
 
 		for (const game of groupGames) {
 			const [passes, favorites, devProducts] = await Promise.all([
