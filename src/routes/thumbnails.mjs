@@ -1,10 +1,9 @@
+// src/routes/thumbnails.mjs
 import express from "express";
 const router = express.Router();
 
 /**
  * Gets a game thumbnail from Universe ID.
- * @param {number|string} universeId
- * @returns {Promise<string|null>} Thumbnail URL
  */
 export async function getThumbnail(universeId) {
 	const res = await fetch(`https://thumbnails.roblox.com/v1/games/icons?universeIds=${universeId}&size=150x150&format=Png&isCircular=false`);
@@ -15,7 +14,7 @@ export async function getThumbnail(universeId) {
 	return found?.imageUrl || null;
 }
 
-// Optional test route
+// Optional route for testing thumbnail API
 router.get("/game/:universeId", async (req, res) => {
 	const thumbnail = await getThumbnail(req.params.universeId);
 	if (thumbnail) {
