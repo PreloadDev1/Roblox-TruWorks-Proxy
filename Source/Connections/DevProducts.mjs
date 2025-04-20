@@ -1,17 +1,16 @@
-// src/routes/devproducts.mjs
 import express from "express";
-import Profile from "../services/profile.mjs";
+import Profile from "../Services/ProfileService.mjs";
 
-const router = express.Router();
+const Router = express.Router();
 
-router.get("/:userId", async (req, res) => {
+Router.get("/:UserID", async (req, res) => {
 	try {
-		const products = await Profile.getDevProducts(req.params.userId);
-		res.json(products);
+		const Products = await Profile.GetDevProducts(req.params.UserID);
+		res.json(Products);
 	} catch (err) {
-		console.error("[/devproducts/:userId]", err);
-		res.status(500).json({ error: "Failed to fetch dev products" });
+		console.error("[/devproducts/:UserID]", err);
+		res.status(500).json({ error: "Failed to fetch developer products" });
 	}
 });
 
-export default router;
+export default Router;
