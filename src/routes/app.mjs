@@ -4,7 +4,7 @@ import getAvatarAssets from "./avatar.mjs";
 import Games from "./games.mjs";
 import Groups from "./groups.mjs";
 
-const router = express.Router();
+const router = express.Router(); // ✅ Router, not app instance
 
 // 🔹 Public assets for a user (games, passes, merch)
 router.get("/assets/:userId", async (req, res) => {
@@ -50,4 +50,4 @@ router.get("/groups/:userId", async (req, res) => {
 	}
 });
 
-export default router;
+export default router; // ✅ Must export router not app
