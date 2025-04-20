@@ -1,25 +1,30 @@
-// avatar.mjs
+// src/avatar.mjs
 
-import filterJSON from "./filterjson.mjs"
+export default async function getAvatarAssets(userId) {
+	const res = await fetch(`https://avatar.roblox.com/v1/users/${userId}/currently-wearing`);
+	const data = await res.json();
 
-const Avatar = {}
+	if (!Array.isArray(data.assetIds)) return [];
 
-// Fetch currently equipped avatar items Avatar.getOutfit = async function (userId) { const res = await fetch(https://avatar.roblox.com/v1/users/${userId}/currently-wearing) if (!res.ok) throw new Error("Failed to fetch avatar outfit") const data = await res.json() return data.assetIds || [] }
+	const detailedAssets = await Promise.all(
+		data.assetIds.map(async (assetId) => {
+			try {
+				const response = await fetch(`https://catalog.roblox.com/v1/catalog/items/${assetId}/details`);
+				const assetData = await response.json();
 
-// Fetch info about individual avatar assets (e.g. hats, shirts) Avatar.getItemDetails = async function (assetIds = []) { if (!Array.isArray(assetIds) || assetIds.length === 0) return [] const idsParam = assetIds.join(",") const res = await fetch(https://catalog.roblox.com/v1/catalog/items/details?assetIds=${idsParam}) const data = await res.json() if (!data || !Array.isArray(data.data)) return []
+				return {
+					ID: assetId,
+					Name: assetData.name || null,
+					Type: assetData.assetType || null,
+					Thumbnail: assetData.thumbnailUrl || null,
+				};
+			} catch (err) {
+				console.warn("[AvatarAssets] Failed to fetch asset detail for ID:", assetId, err);
+				return null;
+			}
+		})
+	);
 
-return data.data.map(item => ({
-	ID: item.id,
-	Name: item.name,
-	Type: item.assetType,
-	Price: item.price,
-	CreatorName: item.creatorName,
-	Thumbnail: item.thumbnail?.imageUrl || null
-}))
-
+	// Filter out any failed/null results
+	return detailedAssets.filter(asset => asset !== null);
 }
-
-// Get all avatar items equipped by a user with details Avatar.getDetailedOutfit = async function (userId) { const assetIds = await Avatar.getOutfit(userId) const details = await Avatar.getItemDetails(assetIds) return details }
-
-export default Avatar
-
