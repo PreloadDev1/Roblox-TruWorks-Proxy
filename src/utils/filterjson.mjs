@@ -26,7 +26,7 @@ export default async function filterJSON({ url, filter, exhaust }) {
 }
 
 export function getMarketInfo(creatorType, creatorId) {
-	return function(item) {
+	return function (item) {
 		return {
 			ID: item.id,
 			Name: item.name,
@@ -35,5 +35,13 @@ export function getMarketInfo(creatorType, creatorId) {
 			CreatorID: creatorId,
 			Thumbnail: item.thumbnail?.imageUrl || null,
 		};
+	};
+}
+
+export function getIdentificationInfo(item) {
+	return {
+		ID: item.id,
+		Name: item.name,
+		Thumbnail: item.thumbnail?.imageUrl || null,
 	};
 }
