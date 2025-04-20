@@ -1,4 +1,4 @@
-import filterJSON, { getMarketInfo } from "./filterjson.mjs";
+import filterJSON, { getMarketInfo } from "../utils/filterjson.mjs";
 import { getThumbnail } from "./thumbnails.mjs";
 
 const Groups = {};
