@@ -4,8 +4,8 @@ import Profile from "./profile.mjs";
 
 const router = express.Router();
 
-function parseDateParts(isoString) {
-	const date = new Date(isoString);
+function parseDateParts(dateString) {
+	const date = new Date(dateString);
 	return {
 		Year: date.getUTCFullYear(),
 		Month: date.getUTCMonth() + 1,
@@ -13,58 +13,51 @@ function parseDateParts(isoString) {
 		Hour: date.getUTCHours(),
 		Minute: date.getUTCMinutes(),
 		Second: date.getUTCSeconds(),
-		Millisecond: date.getUTCMilliseconds(),
+		Millisecond: date.getUTCMilliseconds()
 	};
 }
 
-// 🎯 Route: /game/place/:placeId
-router.get("/place/:placeId", async (req, res) => {
+router.get("/:placeId", async (req, res) => {
 	try {
 		const placeId = parseInt(req.params.placeId);
-		if (isNaN(placeId)) return res.status(400).json({ error: "Invalid placeId" });
 
-		// 🔍 Get UniverseID from PlaceID
 		const universeRes = await fetch(`https://apis.roblox.com/universes/v1/places/${placeId}/universe`);
-		if (!universeRes.ok) throw new Error("Failed to get Universe ID from PlaceID");
+		if (!universeRes.ok) throw new Error("Invalid Place ID");
 
 		const { universeId } = await universeRes.json();
-		if (!universeId) return res.status(404).json({ error: "No universe found for this PlaceID" });
-
-		// 🔍 Get game data
 		const gameRes = await fetch(`https://games.roblox.com/v1/games?universeIds=${universeId}`);
-		if (!gameRes.ok) throw new Error("Failed to get game info");
+		if (!gameRes.ok) throw new Error("Failed to get game data");
 
-		const data = await gameRes.json();
-		const game = data?.data?.[0];
+		const gameData = await gameRes.json();
+		const game = gameData?.data?.[0];
 		if (!game) return res.status(404).json({ error: "Game not found" });
 
-		// 🧠 Get creator info
-		let creator = {
-			ID: game.creator?.id || null,
-			Username: game.creator?.name || null,
+		let creatorInfo = {
+			ID: game.creator.id,
+			Username: game.creator.name,
 			DisplayName: null,
-			Description: null,
-			IsBanned: false,
 			IsVerified: false,
 			Created: null,
+			Description: null,
+			IsBanned: false
 		};
 
 		if (game.creator?.type === "User" && game.creator?.id) {
 			try {
-				creator = await Profile.getBasicInfo(game.creator.id);
+				creatorInfo = await Profile.getBasicInfo(game.creator.id);
 			} catch {}
 		}
 
-		const output = {
-			AllowedGearCategories: game.allowedGearCategories || {},
-			AllowedGearGenres: game.allowedGearGenres || {},
+		const finalGameData = {
+			AllowedGearCategories: game.allowedGearCategories || [],
+			AllowedGearGenres: game.allowedGearGenres || [],
 			CopyingAllowed: game.copyingAllowed,
 			CreateVipServersAllowed: game.createVipServersAllowed,
 			Created: parseDateParts(game.created),
 			Updated: parseDateParts(game.updated),
-			Creator: creator,
+			Creator: creatorInfo,
 			Favourites: game.favoritedCount || 0,
-			Genre1: game.genre || "",
+			Genre1: game.genre,
 			Genre2: game.genre_L1 || "",
 			Genre3: game.genre_L2 || "",
 			UniverseID: game.id,
@@ -77,16 +70,16 @@ router.get("/place/:placeId", async (req, res) => {
 			Description: game.sourceDescription || "",
 			SourcedName: game.sourceName || "",
 			StudioAccessToAPI: game.studioAccessToApisAllowed,
-			AvatarType: game.universeAvatarType || "PlayerChoice",
+			AvatarType: game.universeAvatarType,
 			Visits: game.visits,
-			UpVotes: game.upVotes || 0,
-			DownVotes: game.downVotes || 0,
+			UpVotes: game.upVotes,
+			DownVotes: game.downVotes
 		};
 
-		res.json(output);
+		res.json(finalGameData);
 	} catch (err) {
-		console.error("[/game/place/:placeId]", err);
-		res.status(500).json({ error: "Failed to fetch game data" });
+		console.error("[/game/:placeId]", err);
+		res.status(500).json({ error: "Failed to fetch game info" });
 	}
 });
 
