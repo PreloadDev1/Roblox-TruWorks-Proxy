@@ -108,14 +108,17 @@ Profile.getPublicAssets = async function (userId) {
 		IsBanned: false,
 		IsVerified: false,
 		Created: null,
+
 		FollowerCount: 0,
 		Followers: [],
 		FriendsCount: 0,
 		Friends: [],
 		Following: [],
+
 		BadgeCount: 0,
 		Badges: [],
 		SocialLinks: [],
+
 		UserPasses: [],
 		GroupPasses: [],
 		UserMerch: [],
@@ -145,18 +148,20 @@ Profile.getPublicAssets = async function (userId) {
 	]);
 
 	Object.assign(result, basicInfo);
-	result.FollowerCount = followers.count;
-	result.Followers = followers.list;
-	result.FriendsCount = friends.count;
-	result.Friends = friends.list;
+	result.FollowerCount = followers.Count;
+	result.Followers = followers.List;
+	result.FriendsCount = friends.Count;
+	result.Friends = friends.List;
 	result.Following = following;
-	result.BadgeCount = badges.count;
-	result.Badges = badges.list;
+	result.BadgeCount = badges.Count;
+	result.Badges = badges.List;
 	result.SocialLinks = socialLinks;
 
+	// 🧩 User merch
 	const userMerch = await Users.getStoreAssets(userId, CreatorTypes.User, userId);
 	if (Array.isArray(userMerch)) result.UserMerch.push(...userMerch);
 
+	// 🧩 User-owned games, passes, dev products
 	for (const game of userGames) {
 		const [passes, favorites, devProducts] = await Promise.all([
 			Games.getPasses(game.UniverseID, CreatorTypes.User, userId),
@@ -166,13 +171,14 @@ Profile.getPublicAssets = async function (userId) {
 
 		game.Favorites = favorites.favorites;
 		result.Games.push(game);
-                result.GroupPasses.push(...passes); // ✅ include this inside the loop
-		result.UserPasses.push(...passes);
+		result.UserPasses.push(...passes); // ✅ correct destination
 		result.DevProducts.push(...devProducts);
 	}
 
+	// 🧩 Group-owned games, passes, merch, dev products
 	for (const group of userGroups) {
 		const groupId = group.ID;
+
 		const [groupGames, groupMerch] = await Promise.all([
 			Games.get(groupId, CreatorTypes.Group),
 			Users.getStoreAssets(groupId, CreatorTypes.Group, groupId)
@@ -189,12 +195,13 @@ Profile.getPublicAssets = async function (userId) {
 
 			game.Favorites = favorites.favorites;
 			result.Games.push(game);
-			result.GroupPasses.push(...passes);
+			result.GroupPasses.push(...passes); // ✅ correct destination
 			result.DevProducts.push(...devProducts);
 		}
 	}
 
 	return result;
 };
+
 
 export default Profile;
