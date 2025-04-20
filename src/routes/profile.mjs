@@ -1,9 +1,10 @@
 // src/routes/profile.mjs
-
-import filterJSON, { getIdentificationInfo } from "../utils/filterjson.mjs";
+import filterJSON from "../utils/filterjson.mjs";
 import Groups from "./groups.mjs";
 import Games, { CreatorTypes } from "./games.mjs";
 import Users from "./users.mjs";
+
+const Profile = {};
 
 function parseDateParts(dateString) {
 	if (!dateString) return null;
@@ -15,35 +16,30 @@ function parseDateParts(dateString) {
 		Hour: date.getUTCHours(),
 		Minute: date.getUTCMinutes(),
 		Second: date.getUTCSeconds(),
-		Millisecond: date.getUTCMilliseconds()
+		Millisecond: date.getUTCMilliseconds(),
 	};
 }
 
-const Profile = {};
-
-// Basic user info, returning expected structured format
 Profile.getBasicInfo = async function (userId) {
 	const res = await fetch(`https://users.roblox.com/v1/users/${userId}`);
 	if (!res.ok) throw new Error("Failed to fetch user profile");
 	const data = await res.json();
-
 	return {
 		UserID: data.id,
 		Username: data.name,
 		DisplayName: data.displayName,
 		Description: data.description,
 		IsBanned: data.isBanned,
-		IsVerified: data.hasVerifiedBadge || false,
-		Created: parseDateParts(data.created)
+		IsVerified: data.hasVerifiedBadge,
+		Created: parseDateParts(data.created),
 	};
 };
 
-// Social / friend data
 Profile.getFollowers = async function (userId) {
 	const followers = await filterJSON({
 		url: `https://friends.roblox.com/v1/users/${userId}/followers?limit=100`,
 		exhaust: true,
-		filter: getIdentificationInfo,
+		filter: async (row) => await Profile.getBasicInfo(row.id),
 	});
 	return {
 		count: followers.length,
@@ -55,7 +51,7 @@ Profile.getFollowings = async function (userId) {
 	return await filterJSON({
 		url: `https://friends.roblox.com/v1/users/${userId}/followings?limit=100`,
 		exhaust: true,
-		filter: getIdentificationInfo,
+		filter: async (row) => await Profile.getBasicInfo(row.id),
 	});
 };
 
@@ -63,7 +59,7 @@ Profile.getFriends = async function (userId) {
 	const friends = await filterJSON({
 		url: `https://friends.roblox.com/v1/users/${userId}/friends`,
 		exhaust: false,
-		filter: getIdentificationInfo,
+		filter: async (row) => await Profile.getBasicInfo(row.id),
 	});
 	return {
 		count: friends.length,
@@ -80,7 +76,7 @@ Profile.getBadges = async function (userId) {
 			Name: badge.name,
 			Description: badge.description,
 			AwardedDate: badge.awardedDate,
-			Icon: badge.imageUrl,
+			Thumbnail: badge.imageUrl,
 		}),
 	});
 	return {
@@ -103,7 +99,6 @@ Profile.getFavoriteCounts = async function (universeId) {
 	return { favorites: data.favoritedCount || 0 };
 };
 
-// Full unified public profile fetcher
 Profile.getPublicAssets = async function (userId) {
 	const result = {
 		UserID: userId,
@@ -113,17 +108,14 @@ Profile.getPublicAssets = async function (userId) {
 		IsBanned: false,
 		IsVerified: false,
 		Created: null,
-
 		FollowerCount: 0,
 		Followers: [],
 		FriendsCount: 0,
 		Friends: [],
 		Following: [],
-
 		BadgeCount: 0,
 		Badges: [],
 		SocialLinks: [],
-
 		UserPasses: [],
 		GroupPasses: [],
 		UserMerch: [],
@@ -149,7 +141,7 @@ Profile.getPublicAssets = async function (userId) {
 		Profile.getBadges(userId),
 		Profile.getSocialLinks(userId),
 		Games.get(userId, CreatorTypes.User),
-		Groups.get(userId)
+		Groups.get(userId),
 	]);
 
 	Object.assign(result, basicInfo);
@@ -162,11 +154,9 @@ Profile.getPublicAssets = async function (userId) {
 	result.Badges = badges.list;
 	result.SocialLinks = socialLinks;
 
-	// User Merch
 	const userMerch = await Users.getStoreAssets(userId, CreatorTypes.User, userId);
 	if (Array.isArray(userMerch)) result.UserMerch.push(...userMerch);
 
-	// User-owned Games
 	for (const game of userGames) {
 		const [passes, favorites, devProducts] = await Promise.all([
 			Games.getPasses(game.UniverseID, CreatorTypes.User, userId),
@@ -180,11 +170,27 @@ Profile.getPublicAssets = async function (userId) {
 		result.DevProducts.push(...devProducts);
 	}
 
-	// Group Data
 	for (const group of userGroups) {
-		result.Games.push(...group.Games);
-		result.GroupPasses.push(...group.GamePasses);
-		result.GroupMerch.push(...group.Merch);
+		const groupId = group.ID;
+		const [groupGames, groupMerch] = await Promise.all([
+			Games.get(groupId, CreatorTypes.Group),
+			Users.getStoreAssets(groupId, CreatorTypes.Group, groupId)
+		]);
+
+		if (Array.isArray(groupMerch)) result.GroupMerch.push(...groupMerch);
+
+		for (const game of groupGames) {
+			const [passes, favorites, devProducts] = await Promise.all([
+				Games.getPasses(game.UniverseID, CreatorTypes.Group, groupId),
+				Profile.getFavoriteCounts(game.UniverseID),
+				Games.getDevProducts(game.UniverseID, CreatorTypes.Group, groupId),
+			]);
+
+			game.Favorites = favorites.favorites;
+			result.Games.push(game);
+			result.GroupPasses.push(...passes);
+			result.DevProducts.push(...devProducts);
+		}
 	}
 
 	return result;
