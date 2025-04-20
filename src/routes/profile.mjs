@@ -42,8 +42,8 @@ Profile.getFollowers = async function (userId) {
 		filter: async (row) => await Profile.getBasicInfo(row.id),
 	});
 	return {
-		count: followers.length,
-		list: followers,
+		Count: followers.length,
+		List: followers,
 	};
 };
 
