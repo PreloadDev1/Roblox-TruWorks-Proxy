@@ -7,15 +7,19 @@ import Groups from "./groups.mjs";
 const router = express.Router(); // ✅ Router, not app instance
 
 // 🔹 Public assets for a user (games, passes, merch)
-router.get("/assets/:userId", async (req, res) => {
+router.get("/avatar/:userId", async (req, res, next) => {
 	try {
-		const result = await getPublicAssets(req.params.userId);
-		res.json(result);
+		const userId = parseInt(req.params.userId);
+		if (isNaN(userId)) throw new Error("Invalid User ID");
+
+		const data = await getAvatarAssets(userId);
+		res.json(data);
 	} catch (err) {
-		console.error("[/assets/:userId]", err);
-		res.status(500).json({ error: "Failed to fetch public assets" });
+		console.error("[/avatar/:userId]", err);
+		res.status(500).json({ error: "Failed to get avatar data" });
 	}
 });
+
 
 // 🔹 Avatar data
 router.get("/avatar/:userId", async (req, res) => {
