@@ -16,10 +16,6 @@ import groupRoutes from "./routes/group.mjs";
 import gameRoutes from "./routes/game.mjs";
 import appRoutes from "./routes/app.mjs";
 
-// ✅ NEW ROUTES:
-import groupRoutes from "./routes/group.mjs";
-import gameRoutes from "./routes/game.mjs";
-
 const app = express();
 const port = process.env.PORT || 3000;
 
