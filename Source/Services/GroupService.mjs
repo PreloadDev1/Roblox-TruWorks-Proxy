@@ -1,7 +1,7 @@
 import filterJSON from "../Utilities/FilterJson.mjs";
 import Games, { CreatorTypes } from "./GameService.mjs";
 import Users from "./UserService.mjs";
-import { ToPascalCaseObject } from "../Utilities/FilterJson.mjs";
+import { ToPascalCaseObject } from "../Utilities/ToPascal.mjs";
 
 function ParseDateParts(DateString) {
 	if (!DateString) return null;
