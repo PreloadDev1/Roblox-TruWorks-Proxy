@@ -1,6 +1,20 @@
 import GetAllPages from "../Utilities/GetAllPages.mjs"
 import { GetMarketInfo } from "../Utilities/FilterJson.mjs"
 
+function ParseDate(dateString) {
+  if (!dateString) return null
+  const d = new Date(dateString)
+  return {
+    Year: d.getUTCFullYear(),
+    Month: d.getUTCMonth() + 1,
+    Day: d.getUTCDate(),
+    Hour: d.getUTCHours(),
+    Minute: d.getUTCMinutes(),
+    Second: d.getUTCSeconds(),
+    Millisecond: d.getUTCMilliseconds()
+  }
+}
+
 const Users = {}
 
 Users.GetStoreAssets = async function (TargetID, CreatorType, CreatorID) {
@@ -26,7 +40,7 @@ Users.GetFollowers = async function (UserID) {
             Description: d.description,
             IsBanned: d.isBanned,
             IsVerified: d.hasVerifiedBadge,
-            Created: d.created
+            Created: ParseDate(d.created)
           }
         } catch {
           return null
@@ -59,7 +73,7 @@ Users.GetFriends = async function (UserID) {
             Description: d.description,
             IsBanned: d.isBanned,
             IsVerified: d.hasVerifiedBadge,
-            Created: d.created
+            Created: ParseDate(d.created)
           }
         } catch {
           return null
@@ -80,7 +94,7 @@ Users.GetBadges = async function (UserID) {
     ID: badge.id,
     Name: badge.name,
     Description: badge.description,
-    AwardedDate: badge.awardedDate,
+    Created: ParseDate(badge.awardedDate),
     AwardedCount: badge.statistics?.awardedCount ?? 0,
     WinRatePercentage: badge.statistics?.winRatePercentage ?? null,
     Thumbnail: badge.imageUrl ?? null
