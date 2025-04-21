@@ -4,6 +4,7 @@ const Router = Express.Router();
 
 export async function GetThumbnail(UniverseID) {
 	const Response = await fetch(`https://thumbnails.roblox.com/v1/games/icons?universeIds=${UniverseID}&size=150x150&format=Png&isCircular=false`);
+
 	if (!Response.ok) return null;
 
 	const Data = await Response.json();
@@ -15,6 +16,7 @@ export async function GetThumbnail(UniverseID) {
 Router.get("/game/:UniverseID", async (Request, Response) => {
 	try {
 		const Thumbnail = await GetThumbnail(Request.params.UniverseID);
+
 		if (Thumbnail) {
 			Response.json({ Thumbnail });
 		} else {
