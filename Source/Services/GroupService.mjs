@@ -100,4 +100,42 @@ class Groups {
   }
 }
 
+Groups.Get = async function (userId) {
+  return await FilterJSON({
+    URL: `https://groups.roblox.com/v1/users/${userId}/groups/roles?includeLocked=false`,
+    Exhaust: false,
+    Filter: async (row) => {
+      const g = row.group
+      if (!g || !row.role || row.role.rank !== 255) return null
+
+      const infoRes = await fetch(`https://groups.roblox.com/v1/groups/${g.id}`)
+      if (!infoRes.ok) return null
+      const info = await infoRes.json()
+
+      const games = await Games.Get(g.id, CreatorTypes.Group)
+      const passes = (await Promise.all(
+        games.map((game) =>
+          Games.GetPasses(game.PlaceID, CreatorTypes.Group, g.id)
+        )
+      )).flat()
+
+      const merch = await Users.GetStoreAssets(g.id, CreatorTypes.Group, g.id)
+
+      return {
+        OwnerID: userId,
+        ID: g.id,
+        Name: info.name,
+        OwnerName: info.owner?.username ?? null,
+        Created: ParseDate(info.created),
+        Members: info.memberCount,
+        Games: games,
+        ActivePlayers: games.reduce((sum, x) => sum + (x.ActivePlayers||0), 0),
+        Favourites: games.reduce((sum, x) => sum + (x.Favourites||0), 0),
+        Passes: passes,
+        Merch: merch || []
+      }
+    }
+  })
+}
+
 export default Groups
