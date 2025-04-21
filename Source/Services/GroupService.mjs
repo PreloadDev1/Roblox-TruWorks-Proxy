@@ -1,4 +1,4 @@
-import FilterJSON from "../utils/filterjson.mjs";
+import filterJSON from "../Utilities/FilterJson.mjs";
 import Games, { CreatorTypes } from "./games.mjs";
 import Users from "./users.mjs";
 
