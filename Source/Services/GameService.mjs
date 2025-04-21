@@ -1,199 +1,191 @@
 import FilterJSON from "../Utilities/FilterJson.mjs"
 import { GetThumbnail } from "./ThumbnailService.mjs"
-import Profile from "./ProfileService.mjs"
+import ProfileService from "./ProfileService.mjs"
 
-const Games = {}
-
-const CreatorTypes = {
-	User: "Users",
-	Group: "Groups"
+export const CreatorTypes = {
+  User: "Users",
+  Group: "Groups"
 }
 
-function ParseDate(DateString) {
-	const Date = new globalThis.Date(DateString)
-
-	return {
-		Year: Date.getUTCFullYear(),
-		Month: Date.getUTCMonth() + 1,
-		Day: Date.getUTCDate(),
-		Hour: Date.getUTCHours(),
-		Minute: Date.getUTCMinutes(),
-		Second: Date.getUTCSeconds(),
-		Millisecond: Date.getUTCMilliseconds()
-	}
+function ParseDate(dateString) {
+  const d = new Date(dateString)
+  return {
+    Year: d.getUTCFullYear(),
+    Month: d.getUTCMonth() + 1,
+    Day: d.getUTCDate(),
+    Hour: d.getUTCHours(),
+    Minute: d.getUTCMinutes(),
+    Second: d.getUTCSeconds(),
+    Millisecond: d.getUTCMilliseconds()
+  }
 }
 
-Games.Get = async function (CreatorID, CreatorType) {
-	const URI = CreatorType === CreatorTypes.User ? "users" : "groups"
+class Games {
+  static async Get(CreatorID, CreatorType) {
+    const uri = CreatorType === CreatorTypes.User ? "users" : "groups"
+    const entries = await FilterJSON({
+      URL: `https://games.roblox.com/v2/${uri}/${CreatorID}/games?accessFilter=2&limit=50&sortOrder=Asc`,
+      Exhaust: true,
+      Filter: (g) => ({
+        UniverseID: g.id,
+        PlaceID: g.rootPlace?.id
+      })
+    })
 
-	const BaseGames = await FilterJSON({
-		URL: `https://games.roblox.com/v2/${URI}/${CreatorID}/games?accessFilter=2&limit=50&sortOrder=Asc`,
-		Exhaust: true,
-		Filter: (Game) => ({
-			UniverseID: Game.id,
-			PlaceID: Game.rootPlace?.id
-		})
-	})
+    const result = []
 
-	const FinalGames = []
+    for (const { UniverseID, PlaceID } of entries) {
+      if (!PlaceID) continue
+      try {
+        const uniRes = await fetch(`https://apis.roblox.com/universes/v1/places/${PlaceID}/universe`)
+        if (!uniRes.ok) continue
 
-	for (const Entry of BaseGames) {
-		const PlaceID = Entry.PlaceID
+        const { universeId } = await uniRes.json()
+        const gameRes = await fetch(`https://games.roblox.com/v1/games?universeIds=${universeId}`)
+        if (!gameRes.ok) continue
 
-		try {
-			const UniverseRes = await fetch(`https://apis.roblox.com/universes/v1/places/${PlaceID}/universe`)
-			if (!UniverseRes.ok) continue
+        const { data } = await gameRes.json()
+        const game = data?.[0]
+        if (!game) continue
 
-			const { universeId } = await UniverseRes.json()
+        let creator = {
+          ID: game.creator.id,
+          Username: game.creator.name,
+          DisplayName: null,
+          IsVerified: false,
+          Created: null,
+          Description: null,
+          IsBanned: false
+        }
 
-			const GameRes = await fetch(`https://games.roblox.com/v1/games?universeIds=${universeId}`)
-			if (!GameRes.ok) continue
+        if (game.creator.type === "User") {
+          try {
+            creator = await ProfileService.GetBasicInfo(game.creator.id)
+          } catch {}
+        }
 
-			const GameData = await GameRes.json()
-			const Game = GameData?.data?.[0]
-			if (!Game) continue
+        const passes = await Games.GetPasses(PlaceID, CreatorType, CreatorID)
 
-			let CreatorInfo = {
-				ID: Game.creator.id,
-				Username: Game.creator.name,
-				DisplayName: null,
-				IsVerified: false,
-				Created: null,
-				Description: null,
-				IsBanned: false
-			}
+        result.push({
+          AllowedGearCategories: game.allowedGearCategories || [],
+          AllowedGearGenres: game.allowedGearGenres || [],
+          CopyingAllowed: game.copyingAllowed,
+          CreateVipServersAllowed: game.createVipServersAllowed,
+          Created: ParseDate(game.created),
+          Updated: ParseDate(game.updated),
+          Creator: creator,
+          Favourites: game.favoritedCount || 0,
+          Genre1: game.genre,
+          Genre2: game.genre_L1 || "",
+          Genre3: game.genre_L2 || "",
+          UniverseID: game.id,
+          PlaceID: game.rootPlaceId,
+          IsAllGenre: game.isAllGenre,
+          IsGenreEnforced: game.isGenreEnforced,
+          ServerSize: game.maxPlayers,
+          Name: game.name,
+          ActivePlayers: game.playing,
+          Description: game.sourceDescription || "",
+          SourcedName: game.sourceName || "",
+          StudioAccessToAPI: game.studioAccessToApisAllowed,
+          AvatarType: game.universeAvatarType,
+          Visits: game.visits,
+          UpVotes: game.upVotes,
+          DownVotes: game.downVotes,
+          Thumbnail: await GetThumbnail(game.id),
+          Passes: passes
+        })
+      } catch {}
+    }
 
-			if (Game.creator?.type === "User" && Game.creator?.id) {
-				try {
-					CreatorInfo = await Profile.GetBasicInfo(Game.creator.id)
-				} catch {}
-			}
+    return result
+  }
 
-			const Passes = await Games.GetPasses(Game.rootPlaceId, CreatorType, CreatorID)
+  static async GetGameData(PlaceID) {
+    try {
+      const uniRes = await fetch(`https://apis.roblox.com/universes/v1/places/${PlaceID}/universe`)
+      if (!uniRes.ok) return null
 
-			const FinalGame = {
-				AllowedGearCategories: Game.allowedGearCategories || [],
-				AllowedGearGenres: Game.allowedGearGenres || [],
-				CopyingAllowed: Game.copyingAllowed,
-				CreateVipServersAllowed: Game.createVipServersAllowed,
-				Created: ParseDate(Game.created),
-				Updated: ParseDate(Game.updated),
-				Creator: CreatorInfo,
-				Favourites: Game.favoritedCount || 0,
-				Genre1: Game.genre,
-				Genre2: Game.genre_L1 || "",
-				Genre3: Game.genre_L2 || "",
-				UniverseID: Game.id,
-				PlaceID: Game.rootPlaceId,
-				IsAllGenre: Game.isAllGenre,
-				IsGenreEnforced: Game.isGenreEnforced,
-				ServerSize: Game.maxPlayers,
-				Name: Game.name,
-				ActivePlayers: Game.playing,
-				Description: Game.sourceDescription || "",
-				SourcedName: Game.sourceName || "",
-				StudioAccessToAPI: Game.studioAccessToApisAllowed,
-				AvatarType: Game.universeAvatarType,
-				Visits: Game.visits,
-				UpVotes: Game.upVotes,
-				DownVotes: Game.downVotes,
-				Thumbnail: await GetThumbnail(Game.id),
-				Passes: Passes
-			}
+      const { universeId } = await uniRes.json()
+      const gameRes = await fetch(`https://games.roblox.com/v1/games?universeIds=${universeId}`)
+      if (!gameRes.ok) return null
 
-			FinalGames.push(FinalGame)
-		} catch {}
-	}
+      const { data } = await gameRes.json()
+      const game = data?.[0]
+      if (!game) return null
 
-	return FinalGames
-}
+      const passes = await Games.GetPasses(PlaceID, CreatorTypes.User, game.creator?.id || 0)
 
-Games.GetGameData = async function (PlaceID) {
-	try {
-		const UniverseRes = await fetch(`https://apis.roblox.com/universes/v1/places/${PlaceID}/universe`)
-		if (!UniverseRes.ok) return null
+      return {
+        AllowedGearCategories: game.allowedGearCategories || [],
+        AllowedGearGenres: game.allowedGearGenres || [],
+        CopyingAllowed: game.copyingAllowed,
+        CreateVipServersAllowed: game.createVipServersAllowed,
+        Created: ParseDate(game.created),
+        Updated: ParseDate(game.updated),
+        Creator: {
+          ID: game.creator.id,
+          Username: game.creator.name,
+          DisplayName: null,
+          IsVerified: false,
+          Created: null,
+          Description: null,
+          IsBanned: false
+        },
+        Favourites: game.favoritedCount || 0,
+        Genre1: game.genre,
+        Genre2: game.genre_L1 || "",
+        Genre3: game.genre_L2 || "",
+        UniverseID: game.id,
+        PlaceID: game.rootPlaceId,
+        IsAllGenre: game.isAllGenre,
+        IsGenreEnforced: game.isGenreEnforced,
+        ServerSize: game.maxPlayers,
+        Name: game.name,
+        ActivePlayers: game.playing,
+        Description: game.sourceDescription || "",
+        SourcedName: game.sourceName || "",
+        StudioAccessToAPI: game.studioAccessToApisAllowed,
+        AvatarType: game.universeAvatarType,
+        Visits: game.visits,
+        UpVotes: game.upVotes,
+        DownVotes: game.downVotes,
+        Passes: passes
+      }
+    } catch {
+      return null
+    }
+  }
 
-		const { universeId } = await UniverseRes.json()
+  static async GetPasses(PlaceID, CreatorType, CreatorID) {
+    return await FilterJSON({
+      URL: `https://games.roblox.com/v1/games/${PlaceID}/game-passes?limit=100&sortOrder=Asc`,
+      Exhaust: true,
+      Filter: (p) => ({
+        ID: p.id,
+        Name: p.name,
+        Price: p.price,
+        Thumbnail: p.thumbnail?.imageUrl || null,
+        CreatorType,
+        CreatorID
+      })
+    })
+  }
 
-		const GameRes = await fetch(`https://games.roblox.com/v1/games?universeIds=${universeId}`)
-		if (!GameRes.ok) return null
-
-		const GameData = await GameRes.json()
-		const Game = GameData?.data?.[0]
-		if (!Game) return null
-
-		const Passes = await Games.GetPasses(universeId, "Users", Game.creator?.id || 0)
-
-		return {
-			AllowedGearCategories: Game.allowedGearCategories || [],
-			AllowedGearGenres: Game.allowedGearGenres || [],
-			CopyingAllowed: Game.copyingAllowed,
-			CreateVipServersAllowed: Game.createVipServersAllowed,
-			Created: ParseDate(Game.created),
-			Updated: ParseDate(Game.updated),
-			Creator: {
-				ID: Game.creator.id,
-				Username: Game.creator.name,
-				DisplayName: null,
-				IsVerified: false,
-				Created: null,
-				Description: null,
-				IsBanned: false
-			},
-			Favourites: Game.favoritedCount || 0,
-			Genre1: Game.genre,
-			Genre2: Game.genre_L1 || "",
-			Genre3: Game.genre_L2 || "",
-			UniverseID: Game.id,
-			PlaceID: Game.rootPlaceId,
-			IsAllGenre: Game.isAllGenre,
-			IsGenreEnforced: Game.isGenreEnforced,
-			ServerSize: Game.maxPlayers,
-			Name: Game.name,
-			ActivePlayers: Game.playing,
-			Description: Game.sourceDescription || "",
-			SourcedName: Game.sourceName || "",
-			StudioAccessToAPI: Game.studioAccessToApisAllowed,
-			AvatarType: Game.universeAvatarType,
-			Visits: Game.visits,
-			UpVotes: Game.upVotes,
-			DownVotes: Game.downVotes,
-			Passes: Passes
-		}
-	} catch {
-		return null
-	}
-}
-
-Games.GetPasses = async function (PlaceID, CreatorType, CreatorID) {
-	return await FilterJSON({
-		URL: `https://games.roblox.com/v1/games/${PlaceID}/game-passes?limit=100&sortOrder=Asc`,
-		Exhaust: true,
-		Filter: async (Pass) => ({
-			ID: Pass.id,
-			Name: Pass.name,
-			Price: Pass.price,
-			Thumbnail: Pass.thumbnail?.imageUrl || (await GetThumbnail(Pass.id)),
-			CreatorType,
-			CreatorID
-		})
-	})
-}
-
-Games.GetDevProducts = async function (UniverseID, CreatorType, CreatorID) {
-	return await FilterJSON({
-		URL: `https://games.roblox.com/v1/games/${UniverseID}/developer-products?limit=50`,
-		Exhaust: true,
-		Filter: async (Product) => ({
-			ID: Product.id,
-			Name: Product.name,
-			Price: Product.priceInRobux,
-			CreatorType,
-			CreatorID,
-			Thumbnail: await GetThumbnail(Product.id)
-		})
-	})
+  static async GetDevProducts(UniverseID, CreatorType, CreatorID) {
+    return await FilterJSON({
+      URL: `https://games.roblox.com/v1/games/${UniverseID}/developer-products?limit=50`,
+      Exhaust: true,
+      Filter: (d) => ({
+        ID: d.id,
+        Name: d.name,
+        Price: d.priceInRobux,
+        CreatorType,
+        CreatorID,
+        Thumbnail: d.thumbnail?.imageUrl || null
+      })
+    })
+  }
 }
 
 export default Games
-export { CreatorTypes }
