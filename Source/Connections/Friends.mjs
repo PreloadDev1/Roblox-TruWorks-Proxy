@@ -1,20 +1,23 @@
-import express from "express";
-import Profile from "../Services/ProfileService.mjs";
+import Express from "express"
+import Profile from "../Services/ProfileService.mjs"
 
-const Router = express.Router();
+const Router = Express.Router()
 
-Router.get("/:UserID", async (req, res) => {
+Router.get("/:UserID", async (Request, Response) => {
 	try {
-		const Result = await Profile.GetFriends(req.params.UserID);
+		const UserID = parseInt(Request.params.UserID)
+		if (isNaN(UserID)) return Response.status(400).json({ Error: "Invalid User ID" })
 
-		res.json({
+		const Result = await Profile.GetFriends(UserID)
+
+		Response.json({
 			Count: Result.Count,
 			List: Result.List
-		});
-	} catch (err) {
-		console.error("[/friends/:UserID]", err);
-		res.status(500).json({ error: "Failed to fetch friends" });
+		})
+	} catch (Error) {
+		console.error("[/friends/:UserID]", Error)
+		Response.status(500).json({ Error: "Failed to fetch friends" })
 	}
-});
+})
 
-export default Router;
+export default Router
