@@ -23,6 +23,7 @@ Profile.GetBasicInfo = async function (UserID) {
 	const Response = await fetch(`https://users.roblox.com/v1/users/${UserID}`);
 	if (!Response.ok) throw new Error("Failed to fetch user profile");
 	const Data = await Response.json();
+
 	return {
 		UserID: Data.id,
 		Username: Data.name,
@@ -58,6 +59,18 @@ Profile.GetDevProducts = async function (UserID) {
 	}
 
 	return All;
+};
+
+Profile.GetBadges = async function (UserID) {
+	return await Users.GetBadges(UserID);
+};
+
+Profile.GetFollowers = async function (UserID) {
+	return await Users.GetFollowers(UserID);
+};
+
+Profile.GetFriends = async function (UserID) {
+	return await Users.GetFriends(UserID);
 };
 
 Profile.GetPublicAssets = async function (UserID) {
@@ -96,9 +109,9 @@ Profile.GetPublicAssets = async function (UserID) {
 			UserGroups
 		] = await Promise.all([
 			Profile.GetBasicInfo(UserID),
-			Users.GetFollowers(UserID),
-			Users.GetFriends(UserID),
-			Users.GetBadges(UserID),
+			Profile.GetFollowers(UserID),
+			Profile.GetFriends(UserID),
+			Profile.GetBadges(UserID),
 			Profile.GetSocialLinks(UserID),
 			Games.Get(UserID, CreatorTypes.User),
 			Groups.Get(UserID)
@@ -128,6 +141,7 @@ Profile.GetPublicAssets = async function (UserID) {
 
 			if (GameDetails) Object.assign(Game, GameDetails);
 			Game.Favorites = Favorites.Favorites;
+
 			Result.Games.push(Game);
 			Result.UserPasses.push(...(Passes || []));
 			Result.DevProducts.push(...(DevProducts || []));
@@ -155,6 +169,7 @@ Profile.GetPublicAssets = async function (UserID) {
 
 				if (GameDetails) Object.assign(Game, GameDetails);
 				Game.Favorites = Favorites.Favorites;
+
 				Result.Games.push(Game);
 				Result.GroupPasses.push(...(Passes || []));
 				Result.DevProducts.push(...(DevProducts || []));
