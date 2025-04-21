@@ -108,9 +108,9 @@ Games.Get = async function (CreatorID, CreatorType) {
 	return FinalGames
 }
 
-Games.GetPasses = async function (UniverseID, CreatorType, CreatorID) {
+Games.GetPasses = async function (PlaceID, CreatorType, CreatorID) {
 	return await FilterJSON({
-		URL: `https://games.roblox.com/v1/games/${UniverseID}/game-passes?limit=100&sortOrder=Asc`,
+		URL: `https://games.roblox.com/v1/games/${PlaceID}/game-passes?limit=100&sortOrder=Asc`,
 		Exhaust: true,
 		Filter: async (Pass) => ({
 			ID: Pass.id,
