@@ -45,31 +45,3 @@ export function GetIdentificationInfo(Item) {
 		Thumbnail: Item.thumbnail?.imageUrl || null
 	};
 }
-
-function ToPascalCase(Text) {
-	if (typeof Text !== "string") return Text;
-
-	return Text
-		.replace(/[_-](.)/g, (_, Character) => Character.toUpperCase())
-		.replace(/^(.)/, (_, Character) => Character.toUpperCase());
-}
-
-function ToPascalCaseObject(Object) {
-	if (typeof Object !== "object" || Object === null || Array.isArray(Object)) {
-		return Object;
-	}
-
-	const Result = {};
-	for (const [Key, Value] of Object.entries(Object)) {
-		const PascalKey = ToPascalCase(Key);
-		Result[PascalKey] = typeof Value === "object" && Value !== null
-			? Array.isArray(Value)
-				? Value.map(ToPascalCaseObject)
-				: ToPascalCaseObject(Value)
-			: Value;
-	}
-
-	return Result;
-}
-
-export { ToPascalCase, ToPascalCaseObject };
