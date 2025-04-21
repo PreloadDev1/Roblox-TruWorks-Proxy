@@ -1,7 +1,6 @@
 import FilterJSON from "../Utilities/FilterJson.mjs";
 import { GetThumbnail } from "./ThumbnailService.mjs";
 import Profile from "./ProfileService.mjs";
-import { ToPascalCaseObject } from "../Utilities/ToPascal.mjs";
 
 const Games = {};
 
@@ -11,7 +10,7 @@ const CreatorTypes = {
 };
 
 function ParseDate(DateString) {
-	const Date = new globalThis.Date(DateString);
+	const Date = new Date(DateString);
 	return {
 		Year: Date.getUTCFullYear(),
 		Month: Date.getUTCMonth() + 1,
@@ -98,7 +97,7 @@ Games.Get = async function (CreatorID, CreatorType) {
 				Thumbnail: await GetThumbnail(Game.id, "GameIcon")
 			};
 
-			FinalGames.push(ToPascalCaseObject(FormattedGame));
+			FinalGames.push(FormattedGame);
 		} catch {}
 	}
 
@@ -109,15 +108,14 @@ Games.GetPasses = async function (UniverseID, CreatorType, CreatorID) {
 	return await FilterJSON({
 		URL: `https://games.roblox.com/v1/games/${UniverseID}/game-passes?limit=100&sortOrder=Asc`,
 		Exhaust: true,
-		Filter: async (Pass) =>
-			ToPascalCaseObject({
-				ID: Pass.id,
-				Name: Pass.name,
-				Price: Pass.price,
-				Thumbnail: Pass.thumbnail?.imageUrl || (await GetThumbnail(Pass.id, "Asset")),
-				CreatorType,
-				CreatorID
-			})
+		Filter: async (Pass) => ({
+			ID: Pass.id,
+			Name: Pass.name,
+			Price: Pass.price,
+			Thumbnail: Pass.thumbnail?.imageUrl || (await GetThumbnail(Pass.id, "Asset")),
+			CreatorType,
+			CreatorID
+		})
 	});
 };
 
@@ -125,15 +123,14 @@ Games.GetDevProducts = async function (UniverseID, CreatorType, CreatorID) {
 	return await FilterJSON({
 		URL: `https://games.roblox.com/v1/games/${UniverseID}/developer-products?limit=50`,
 		Exhaust: true,
-		Filter: async (Product) =>
-			ToPascalCaseObject({
-				ID: Product.id,
-				Name: Product.name,
-				Price: Product.priceInRobux,
-				CreatorType,
-				CreatorID,
-				Thumbnail: await GetThumbnail(Product.id, "Asset")
-			})
+		Filter: async (Product) => ({
+			ID: Product.id,
+			Name: Product.name,
+			Price: Product.priceInRobux,
+			CreatorType,
+			CreatorID,
+			Thumbnail: await GetThumbnail(Product.id, "Asset")
+		})
 	});
 };
 
