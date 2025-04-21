@@ -1,16 +1,15 @@
 import GetAllPages from "../Utilities/GetAllPages.mjs"
 import { GetMarketInfo } from "../Utilities/FilterJson.mjs"
 
-class Users {
-  static async GetStoreAssets(TargetID, CreatorType, CreatorID) {
-    const url = `https://catalog.roblox.com/v1/search/items/details?CreatorTargetId=${TargetID}&CreatorType=${
-      CreatorType === "Groups" ? 2 : 1
-    }&Limit=30&SortType=3`
-    return await GetAllPages(url, GetMarketInfo(CreatorType, CreatorID))
-  }
+const Users = {}
 
-Users.GetFollowers = async function (userId) {
-  const url = `https://friends.roblox.com/v1/users/${userId}/followers?limit=100`
+Users.GetStoreAssets = async function (TargetID, CreatorType, CreatorID) {
+  const url = `https://catalog.roblox.com/v1/search/items/details?CreatorTargetId=${TargetID}&CreatorType=${CreatorType === "Groups" ? 2 : 1}&Limit=30&SortType=3`
+  return await GetAllPages(url, GetMarketInfo(CreatorType, CreatorID))
+}
+
+Users.GetFollowers = async function (UserID) {
+  const url = `https://friends.roblox.com/v1/users/${UserID}/followers?limit=100`
   const raw = await GetAllPages(url, entry => entry)
 
   const list = (
@@ -42,8 +41,8 @@ Users.GetFollowers = async function (userId) {
   }
 }
 
-Users.GetFriends = async function (userId) {
-  const url = `https://friends.roblox.com/v1/users/${userId}/friends?limit=100`
+Users.GetFriends = async function (UserID) {
+  const url = `https://friends.roblox.com/v1/users/${UserID}/friends?limit=100`
   const raw = await GetAllPages(url, entry => entry)
 
   const list = (
@@ -75,16 +74,16 @@ Users.GetFriends = async function (userId) {
   }
 }
 
-Users.GetBadges = async function (userId) {
-  const url = `https://badges.roblox.com/v1/users/${userId}/badges?limit=100`
-  const list = await GetAllPages(url, b => ({
-    ID: b.id,
-    Name: b.name,
-    Description: b.description,
-    AwardedDate: b.awardedDate,
-    AwardedCount: b.statistics?.awardedCount ?? 0,
-    WinRatePercentage: b.statistics?.winRatePercentage ?? null,
-    Thumbnail: b.imageUrl ?? null
+Users.GetBadges = async function (UserID) {
+  const url = `https://badges.roblox.com/v1/users/${UserID}/badges?limit=100`
+  const list = await GetAllPages(url, badge => ({
+    ID: badge.id,
+    Name: badge.name,
+    Description: badge.description,
+    AwardedDate: badge.awardedDate,
+    AwardedCount: badge.statistics?.awardedCount ?? 0,
+    WinRatePercentage: badge.statistics?.winRatePercentage ?? null,
+    Thumbnail: badge.imageUrl ?? null
   }))
 
   return {
