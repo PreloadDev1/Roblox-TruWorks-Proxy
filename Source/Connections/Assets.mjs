@@ -3,17 +3,16 @@ import PublicAssetsService from "../Services/PublicAssetsService.mjs"
 
 const Router = Express.Router()
 
-Router.get("/:UserID", async (req, res) => {
+Router.get("/:UserID", async (Request, Response) => {
 	try {
-		const UserID = parseInt(req.params.UserID)
-		if (isNaN(UserID)) return res.status(400).json({ Error: "Invalid User ID" })
+		const UserID = parseInt(Request.params.UserID)
+		if (isNaN(UserID)) return Response.status(400).json({ Error: "Invalid User ID" })
 
 		const Assets = await PublicAssetsService.GetPublicAssets(UserID)
-		res.json(Assets)
-
+		Response.json(Assets)
 	} catch (err) {
 		console.error("[/assets/:UserID]", err)
-		res.status(500).json({ Error: "Failed to fetch public assets" })
+		Response.status(500).json({ Error: "Failed to fetch public assets" })
 	}
 })
 
