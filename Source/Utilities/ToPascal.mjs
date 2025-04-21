@@ -1,24 +1,23 @@
-function ToPascalCase(Text) {
-	return Text
-		.replace(/[_\-\s]+/g, " ")
-		.split(" ")
-		.map(Part => Part.charAt(0).toUpperCase() + Part.slice(1).toLowerCase())
-		.join("");
-}
-
-function ToPascalCaseObject(Value) {
-	if (Array.isArray(Value)) {
-		return Value.map(ToPascalCaseObject);
-	} else if (Value !== null && typeof Value === "object") {
-		const Result = {};
-		for (const Key in Value) {
-			const PascalKey = ToPascalCase(Key);
-			Result[PascalKey] = ToPascalCaseObject(Value[Key]);
-		}
-		return Result;
-	} else {
-		return Value;
+export function ToPascalCaseObject(ObjectValue) {
+	if (Array.isArray(ObjectValue)) {
+		return ObjectValue.map(ToPascalCaseObject);
 	}
-}
 
-export { ToPascalCase, ToPascalCaseObject };
+	if (typeof ObjectValue === "object" && ObjectValue !== null) {
+		const Output = {};
+
+		for (const [Key, Value] of Object.entries(ObjectValue)) {
+			let Pascal = Key.replace(/(^|_)(\w)/g, (_, __, Character) => Character.toUpperCase());
+
+			Pascal = Pascal
+				.replace(/Id$/, "ID")
+				.replace(/Url$/, "URL");
+
+			Output[Pascal] = ToPascalCaseObject(Value);
+		}
+
+		return Output;
+	}
+
+	return ObjectValue;
+}
