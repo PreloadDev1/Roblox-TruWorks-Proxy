@@ -14,4 +14,55 @@ Users.GetStoreAssets = async function (UserID, CreatorType, CreatorID) {
 	return Array.isArray(Response) ? Response.map(ToPascalCaseObject) : [];
 };
 
+Users.GetFollowers = async function (UserID) {
+	const List = [];
+	let Cursor = "";
+	let HasMore = true;
+
+	while (HasMore) {
+		try {
+			const URL = `https://friends.roblox.com/v1/users/${UserID}/followers?limit=100${Cursor ? `&cursor=${Cursor}` : ""}`;
+			const Response = await fetch(URL);
+
+			if (!Response.ok) break;
+
+			const Data = await Response.json();
+			if (!Array.isArray(Data.data)) break;
+
+			List.push(...Data.data.map(ToPascalCaseObject));
+
+			Cursor = Data.nextPageCursor;
+			HasMore = !!Cursor;
+		} catch {
+			break;
+		}
+	}
+
+	return {
+		Count: List.length,
+		List
+	};
+};
+
+Users.GetFriends = async function (UserID) {
+	try {
+		const Response = await fetch(`https://friends.roblox.com/v1/users/${UserID}/friends`);
+		const Data = await Response.json();
+
+		const List = Array.isArray(Data.data)
+			? Data.data.map(ToPascalCaseObject)
+			: [];
+
+		return {
+			Count: List.length,
+			List
+		};
+	} catch {
+		return {
+			Count: 0,
+			List: []
+		};
+	}
+};
+
 export default Users;
