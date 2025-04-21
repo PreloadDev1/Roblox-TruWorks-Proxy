@@ -1,4 +1,5 @@
-import { FilterJSON, GetMarketInfo } from "../Utilities/FilterJson.mjs";
+import FilterJSON from "../Utilities/FilterJson.mjs";
+import { GetMarketInfo } from "../Utilities/FilterJson.mjs";
 
 const Users = {};
 
