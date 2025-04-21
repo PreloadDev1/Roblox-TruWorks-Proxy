@@ -1,6 +1,7 @@
 import FilterJSON from "../Utilities/FilterJson.mjs"
 import { GetMarketInfo } from "../Utilities/FilterJson.mjs"
 import { GetAllPages } from "../Utilities/GetAllPages.mjs"
+import Profile from "./ProfileService.mjs";
 
 const Users = {}
 
@@ -10,44 +11,36 @@ Users.GetStoreAssets = async function (UserID, CreatorType, CreatorID) {
 }
 
 Users.GetFollowers = async function (UserID) {
-	const URL = `https://friends.roblox.com/v1/users/${UserID}/followers?limit=100`
-	const Followers = await GetAllPages(URL, async (Entry) => Entry)
-
+	const URL = `https://friends.roblox.com/v1/users/${UserID}/followers?limit=100`;
+	const Followers = await GetAllPages(URL, async (Entry) => {
+		try {
+			const ProfileData = await Profile.GetBasicInfo(Entry.id);
+			return ProfileData;
+		} catch {
+			return null;
+		}
+	});
 	return {
 		Count: Followers.length,
-		List: Followers
-	}
-}
+		List: Followers.filter(Boolean)
+	};
+};
 
 Users.GetFriends = async function (UserID) {
-	const URL = `https://friends.roblox.com/v1/users/${UserID}/friends?limit=100`
-
+	const URL = `https://friends.roblox.com/v1/users/${UserID}/friends?limit=100`;
 	const Friends = await GetAllPages(URL, async (Entry) => {
 		try {
-			const Res = await fetch(`https://users.roblox.com/v1/users/${Entry.id}`)
-			if (!Res.ok) return null
-
-			const Info = await Res.json()
-
-			return {
-				UserID: Info.id,
-				Username: Info.name,
-				DisplayName: Info.displayName,
-				Description: Info.description,
-				IsBanned: Info.isBanned,
-				IsVerified: Info.hasVerifiedBadge,
-				Created: new Date(Info.created)
-			}
+			const ProfileData = await Profile.GetBasicInfo(Entry.id);
+			return ProfileData;
 		} catch {
-			return null
+			return null;
 		}
-	})
-
+	});
 	return {
 		Count: Friends.length,
-		List: Friends
-	}
-}
+		List: Friends.filter(Boolean)
+	};
+};
 
 Users.GetBadges = async function (UserID) {
 	const URL = `https://badges.roblox.com/v1/users/${UserID}/badges?limit=100`
