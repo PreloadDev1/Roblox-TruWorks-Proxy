@@ -15,9 +15,9 @@ export default async function GetPublicAssets(UserID) {
 		const UserGames = await Games.Get(UserID, CreatorTypes.User);
 
 		for (const Game of UserGames) {
-			if (!Game.UniverseID) continue;
+			if (!Game.PlaceID) continue;
 
-			const Passes = await Games.GetPasses(Game.UniverseID, CreatorTypes.User, UserID);
+			const Passes = await Games.GetPasses(Game.PlaceID, CreatorTypes.User, UserID);
 			if (Array.isArray(Passes)) Result.UserPasses.push(...Passes);
 		}
 
@@ -34,9 +34,9 @@ export default async function GetPublicAssets(UserID) {
 
 			const GroupGames = await Games.Get(GroupID, CreatorTypes.Group);
 			for (const Game of GroupGames) {
-				if (!Game.UniverseID) continue;
+				if (!Game.PlaceID) continue;
 
-				const Passes = await Games.GetPasses(Game.UniverseID, CreatorTypes.Group, GroupID);
+				const Passes = await Games.GetPasses(Game.PlaceID, CreatorTypes.Group, GroupID);
 				if (Array.isArray(Passes)) Result.GroupPasses.push(...Passes);
 			}
 		}
