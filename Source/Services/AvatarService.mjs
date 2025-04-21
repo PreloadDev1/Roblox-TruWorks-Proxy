@@ -1,16 +1,14 @@
-const GetAvatarAssets = async function (UserID) {
-	const Response = await fetch(`https://avatar.roblox.com/v1/users/${UserID}/avatar`);
-	if (!Response.ok) throw new Error("Failed to fetch avatar data");
+export default async function GetAvatarAssets(UserID) {
+	const Response = await fetch(`https://avatar.roblox.com/v1/users/${UserID}/avatar-appearance`);
+	if (!Response.ok) throw new Error("Failed to fetch avatar");
 
 	const Data = await Response.json();
 
 	const DetailedAssets = await Promise.all(
 		Data.assetIds.map(async (AssetID) => {
 			try {
-				const Response = await fetch(`https://catalog.roblox.com/v1/catalog/items/${AssetID}/details`);
-				if (!Response.ok) return null;
-
-				const AssetData = await Response.json();
+				const Res = await fetch(`https://catalog.roblox.com/v1/catalog/items/${AssetID}/details`);
+				const AssetData = await Res.json();
 
 				return {
 					ID: AssetID,
@@ -18,17 +16,12 @@ const GetAvatarAssets = async function (UserID) {
 					Type: AssetData.assetType || null,
 					Thumbnail: AssetData.thumbnailUrl || null
 				};
+
 			} catch {
-				console.warn("[AvatarAssets] Failed:", AssetID);
 				return null;
 			}
 		})
 	);
 
-	return {
-		UserID,
-		Assets: DetailedAssets.filter(Boolean)
-	};
-};
-
-export default GetAvatarAssets;
+	return DetailedAssets.filter(Boolean);
+}
