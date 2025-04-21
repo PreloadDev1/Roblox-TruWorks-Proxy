@@ -1,4 +1,5 @@
 import { GetMarketInfo } from "../Utilities/FilterJson.mjs";
+import { ToPascalCaseObject } from "../Utilities/ToPascal.mjs";
 
 const Users = {};
 
