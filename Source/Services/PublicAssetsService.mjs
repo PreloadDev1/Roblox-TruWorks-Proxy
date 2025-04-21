@@ -1,8 +1,8 @@
-import Groups from "./GroupService.mjs";
-import Games, { CreatorTypes } from "./GameService.mjs";
-import Users from "./UserService.mjs";
+import Groups from "./GroupService.mjs"
+import Games, { CreatorTypes } from "./GameService.mjs"
+import Users from "./UserService.mjs"
 
-const PublicAssets = {};
+const PublicAssets = {}
 
 PublicAssets.GetAll = async function (UserID) {
 	const Result = {
@@ -10,44 +10,46 @@ PublicAssets.GetAll = async function (UserID) {
 		UserMerch: [],
 		GroupPasses: [],
 		GroupMerch: []
-	};
+	}
 
 	try {
-		const GamesList = await Games.Get(UserID, CreatorTypes.User);
-		const UserMerch = await Users.GetStoreAssets(UserID, CreatorTypes.User, UserID);
+		const GamesList = await Games.Get(UserID, CreatorTypes.User)
+		const UserStore = await Users.GetStoreAssets(UserID, CreatorTypes.User, UserID)
 
 		for (const Game of GamesList || []) {
-			if (!Game.PlaceID) continue;
+			if (!Game.PlaceID) continue
 
-			const Passes = await Games.GetPasses(Game.PlaceID, CreatorTypes.User, UserID);
-			if (Array.isArray(Passes)) Result.UserPasses.push(...Passes);
+			const Passes = await Games.GetPasses(Game.PlaceID, CreatorTypes.User, UserID)
+			if (Array.isArray(Passes)) Result.UserPasses.push(...Passes)
 		}
 
-		if (Array.isArray(UserMerch)) {
-			Result.UserMerch.push(...UserMerch);
+		if (Array.isArray(UserStore)) {
+			Result.UserMerch.push(...UserStore)
 		}
 
-		const GroupsList = await Groups.Get(UserID);
+		const GroupsList = await Groups.Get(UserID)
+
 		for (const Group of GroupsList || []) {
-			const GroupID = Group.ID;
-			if (!GroupID) continue;
+			const GroupID = Group.ID
+			if (!GroupID) continue
 
-			const GroupMerch = await Users.GetStoreAssets(GroupID, CreatorTypes.Group, GroupID);
-			if (Array.isArray(GroupMerch)) Result.GroupMerch.push(...GroupMerch);
+			const GroupStore = await Users.GetStoreAssets(GroupID, CreatorTypes.Group, GroupID)
+			if (Array.isArray(GroupStore)) Result.GroupMerch.push(...GroupStore)
 
-			const GroupGames = await Games.Get(GroupID, CreatorTypes.Group);
+			const GroupGames = await Games.Get(GroupID, CreatorTypes.Group)
+
 			for (const Game of GroupGames || []) {
-				if (!Game.PlaceID) continue;
+				if (!Game.PlaceID) continue
 
-				const Passes = await Games.GetPasses(Game.PlaceID, CreatorTypes.Group, GroupID);
-				if (Array.isArray(Passes)) Result.GroupPasses.push(...Passes);
+				const Passes = await Games.GetPasses(Game.PlaceID, CreatorTypes.Group, GroupID)
+				if (Array.isArray(Passes)) Result.GroupPasses.push(...Passes)
 			}
 		}
 	} catch (Error) {
-		console.error("[PublicAssetsService:GetAll]", Error);
+		console.error("[PublicAssetsService.GetAll]", Error)
 	}
 
-	return Result;
-};
+	return Result
+}
 
-export default PublicAssets;
+export default PublicAssets
