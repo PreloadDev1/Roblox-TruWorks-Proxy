@@ -22,7 +22,7 @@ function ParseDate(dateString) {
 
 class Games {
   static async Get(creatorId, creatorType) {
-    const uri    = creatorType === CreatorTypes.User ? "users" : "groups"
+    const uri     = creatorType === CreatorTypes.User ? "users" : "groups"
     const entries = await FilterJSON({
       URL:     `https://games.roblox.com/v2/${uri}/${creatorId}/games?accessFilter=2&limit=50&sortOrder=Asc`,
       Exhaust: true,
@@ -177,7 +177,7 @@ class Games {
         ID:          d.id,
         Name:        d.name,
         Price:       d.priceInRobux,
-        Thumbnail:   await GetThumbnail(d.id),
+        Thumbnail:   d.thumbnail?.imageUrl || null,
         CreatorType: creatorType,
         CreatorID:   creatorId
       })
