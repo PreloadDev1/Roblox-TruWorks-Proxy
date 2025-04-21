@@ -1,23 +1,24 @@
-export default async function GetAllPages(BaseURL, FilterFunction) {
-  const Results = []
-  let Cursor = ""
-  let HasMore = true
+export async function GetAllPages(BaseURL, FilterFunction) {
+  const results = []
+  let cursor = ""
+  let hasMore = true
 
-  while (HasMore) {
-    const Response = await fetch(`${BaseURL}${Cursor ? `&cursor=${Cursor}` : ""}`)
-    if (!Response.ok) break
+  while (hasMore) {
+    const url = `${BaseURL}${cursor ? `&cursor=${cursor}` : ""}`
+    const res = await fetch(url)
+    if (!res.ok) break
 
-    const Body = await Response.json()
-    if (!Array.isArray(Body.data)) break
+    const body = await res.json()
+    if (!Array.isArray(body.data)) break
 
-    for (const Item of Body.data) {
-      const Entry = await FilterFunction(Item)
-      if (Entry) Results.push(Entry)
+    for (const entry of body.data) {
+      const item = await FilterFunction(entry)
+      if (item) results.push(item)
     }
 
-    Cursor = Body.nextPageCursor
-    HasMore = !!Cursor
+    cursor = body.nextPageCursor
+    hasMore = Boolean(cursor)
   }
 
-  return Results
+  return results
 }
