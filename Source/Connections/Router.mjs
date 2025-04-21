@@ -1,66 +1,35 @@
 import Express from "express"
-import GetPublicAssets from "./Main.mjs"
-import GetAvatarAssets from "../Services/AvatarService.mjs"
-import Games from "../Services/GameService.mjs"
-import Groups from "../Services/GroupService.mjs"
-import Profile from "../Services/ProfileService.mjs"
+import AvatarRouter from "./Avatar.mjs"
+import BadgesRouter from "./Badges.mjs"
+import DevProductsRouter from "./DevProducts.mjs"
+import FollowersRouter from "./Followers.mjs"
+import FriendsRouter from "./Friends.mjs"
+import GameRouter from "./Game.mjs"
+import GroupRouter from "./Group.mjs"
+import ProfileRouter from "./Profile.mjs"
+import SocialsRouter from "./Socials.mjs"
+import AssetsRouter from "./Assets.mjs"
 
 const Router = Express.Router()
 
-Router.get("/avatar/:UserID", async (Request, Response) => {
-	try {
-		const UserID = parseInt(Request.params.UserID)
-		if (isNaN(UserID)) return Response.status(400).json({ Error: "Invalid User ID" })
+Router.use("/avatar", AvatarRouter)
 
-		const AvatarData = await GetAvatarAssets(UserID)
-		Response.json(AvatarData)
+Router.use("/games", GameRouter)
 
-	} catch (Error) {
-		console.error("[/avatar/:UserID]", Error)
-		Response.status(500).json({ Error: "Failed to fetch avatar data" })
-	}
-})
+Router.use("/groups", GroupRouter)
 
-Router.get("/games/:UserID", async (Request, Response) => {
-	try {
-		const UserID = parseInt(Request.params.UserID)
-		if (isNaN(UserID)) return Response.status(400).json({ Error: "Invalid User ID" })
+Router.use("/profile/:UserID/socials", SocialsRouter)
 
-		const GameList = await Games.Get(UserID, "Users")
-		Response.json(GameList)
+Router.use("/profile", ProfileRouter)
 
-	} catch (Error) {
-		console.error("[/games/:UserID]", Error)
-		Response.status(500).json({ Error: "Failed to fetch games" })
-	}
-})
+Router.use("/assets", AssetsRouter)
 
-Router.get("/groups/:UserID", async (Request, Response) => {
-	try {
-		const UserID = parseInt(Request.params.UserID)
-		if (isNaN(UserID)) return Response.status(400).json({ Error: "Invalid User ID" })
+Router.use("/badges", BadgesRouter)
 
-		const GroupList = await Groups.Get(UserID)
-		Response.json(GroupList)
+Router.use("/devproducts", DevProductsRouter)
 
-	} catch (Error) {
-		console.error("[/groups/:UserID]", Error)
-		Response.status(500).json({ Error: "Failed to fetch groups" })
-	}
-})
+Router.use("/followers", FollowersRouter)
 
-Router.get("/profile/:UserID", async (Request, Response) => {
-	try {
-		const UserID = parseInt(Request.params.UserID)
-		if (isNaN(UserID)) return Response.status(400).json({ Error: "Invalid User ID" })
-
-		const ProfileData = await Profile.GetPublicAssets(UserID)
-		Response.json(ProfileData)
-
-	} catch (Error) {
-		console.error("[/profile/:UserID]", Error)
-		Response.status(500).json({ Error: "Failed to fetch profile data" })
-	}
-})
+Router.use("/friends", FriendsRouter)
 
 export default Router
