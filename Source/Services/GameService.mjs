@@ -1,4 +1,4 @@
-import FilterJSON from "../utils/filterjson.mjs";
+import filterJSON from "../Utilities/FilterJson.mjs";
 import { GetThumbnail } from "./thumbnails.mjs";
 import Profile from "./profile.mjs";
 
