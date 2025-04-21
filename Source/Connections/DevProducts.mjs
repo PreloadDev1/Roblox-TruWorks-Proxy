@@ -1,16 +1,19 @@
-import express from "express";
-import Profile from "../Services/ProfileService.mjs";
+import Express from "express"
+import Profile from "../Services/ProfileService.mjs"
 
-const Router = express.Router();
+const Router = Express.Router()
 
-Router.get("/:UserID", async (req, res) => {
+Router.get("/:UserID", async (Request, Response) => {
 	try {
-		const Products = await Profile.GetDevProducts(req.params.UserID);
-		res.json(Products);
-	} catch (err) {
-		console.error("[/devproducts/:UserID]", err);
-		res.status(500).json({ error: "Failed to fetch developer products" });
-	}
-});
+		const UserID = parseInt(Request.params.UserID)
+		if (isNaN(UserID)) return Response.status(400).json({ Error: "Invalid User ID" })
 
-export default Router;
+		const Products = await Profile.GetDevProducts(UserID)
+		Response.json(Products)
+	} catch (Error) {
+		console.error("[/devproducts/:UserID]", Error)
+		Response.status(500).json({ Error: "Failed to fetch developer products" })
+	}
+})
+
+export default Router
