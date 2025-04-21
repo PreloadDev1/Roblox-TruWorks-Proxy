@@ -7,59 +7,55 @@ import ProfileService from "../Services/ProfileService.mjs";
 
 const Router = Express.Router();
 
-Router.get("/avatar/:UserID", async (Request, Response) => {
+Router.get("/avatar/:UserID", async (req, res) => {
 	try {
-		const UserID = parseInt(Request.params.UserID);
-		if (isNaN(UserID)) return Response.status(400).json({ Error: "Invalid User ID" });
+		const UserID = parseInt(req.params.UserID);
+		if (isNaN(UserID)) return res.status(400).json({ Error: "Invalid User ID" });
 
 		const AvatarData = await GetAvatarAssets(UserID);
-		Response.json(AvatarData);
-
-	} catch (Error) {
-		console.error("[/avatar/:UserID]", Error);
-		Response.status(500).json({ Error: "Failed to fetch avatar data" });
+		res.json(AvatarData);
+	} catch (err) {
+		console.error("[/avatar/:UserID]", err);
+		res.status(500).json({ Error: "Failed to fetch avatar data" });
 	}
 });
 
-Router.get("/games/:UserID", async (Request, Response) => {
+Router.get("/games/:UserID", async (req, res) => {
 	try {
-		const UserID = parseInt(Request.params.UserID);
-		if (isNaN(UserID)) return Response.status(400).json({ Error: "Invalid User ID" });
+		const UserID = parseInt(req.params.UserID);
+		if (isNaN(UserID)) return res.status(400).json({ Error: "Invalid User ID" });
 
 		const GameList = await Games.Get(UserID, "Users");
-		Response.json(GameList);
-
-	} catch (Error) {
-		console.error("[/games/:UserID]", Error);
-		Response.status(500).json({ Error: "Failed to fetch games" });
+		res.json(GameList);
+	} catch (err) {
+		console.error("[/games/:UserID]", err);
+		res.status(500).json({ Error: "Failed to fetch games" });
 	}
 });
 
-Router.get("/groups/:UserID", async (Request, Response) => {
+Router.get("/groups/:UserID", async (req, res) => {
 	try {
-		const UserID = parseInt(Request.params.UserID);
-		if (isNaN(UserID)) return Response.status(400).json({ Error: "Invalid User ID" });
+		const UserID = parseInt(req.params.UserID);
+		if (isNaN(UserID)) return res.status(400).json({ Error: "Invalid User ID" });
 
 		const GroupList = await Groups.Get(UserID);
-		Response.json(GroupList);
-
-	} catch (Error) {
-		console.error("[/groups/:UserID]", Error);
-		Response.status(500).json({ Error: "Failed to fetch groups" });
+		res.json(GroupList);
+	} catch (err) {
+		console.error("[/groups/:UserID]", err);
+		res.status(500).json({ Error: "Failed to fetch groups" });
 	}
 });
 
-Router.get("/profile/:UserID", async (Request, Response) => {
+Router.get("/profile/:UserID", async (req, res) => {
 	try {
-		const UserID = parseInt(Request.params.UserID);
-		if (isNaN(UserID)) return Response.status(400).json({ Error: "Invalid User ID" });
+		const UserID = parseInt(req.params.UserID);
+		if (isNaN(UserID)) return res.status(400).json({ Error: "Invalid User ID" });
 
-		const PublicAssets = await ProfileService.GetPublicAssets(UserID);
-		Response.json(PublicAssets);
-
-	} catch (Error) {
-		console.error("[/profile/:UserID]", Error);
-		Response.status(500).json({ Error: "Failed to fetch profile data" });
+		const Profile = await ProfileService.GetPublicAssets(UserID);
+		res.json(Profile);
+	} catch (err) {
+		console.error("[/profile/:UserID]", err);
+		res.status(500).json({ Error: "Failed to fetch profile data" });
 	}
 });
 
