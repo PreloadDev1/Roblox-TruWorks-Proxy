@@ -1,16 +1,16 @@
 import Express from "express";
 import CORS from "cors";
 
-import AvatarRoutes from "./routes/avatar.mjs";
-import ProfileRoutes from "./routes/profile.mjs";
-import DevProductsRoutes from "./routes/devproducts.mjs";
-import FollowersRoutes from "./routes/followers.mjs";
-import FriendsRoutes from "./routes/friends.mjs";
-import BadgesRoutes from "./routes/badges.mjs";
-import SocialsRoutes from "./routes/socials.mjs";
-import GroupRoutes from "./routes/group.mjs";
-import GameRoutes from "./routes/game.mjs";
-import AppRoutes from "./routes/app.mjs";
+import AvatarRoutes from "./Connections/Avatar.mjs";
+import ProfileRoutes from "./Connections/Profile.mjs";
+import DevProductsRoutes from "./Connections/DevProducts.mjs";
+import FollowersRoutes from "./Connections/Followers.mjs";
+import FriendsRoutes from "./Connections/Friends.mjs";
+import BadgesRoutes from "./Connections/Badges.mjs";
+import SocialsRoutes from "./Connections/Socials.mjs";
+import GroupRoutes from "./Connections/Group.mjs";
+import GameRoutes from "./Connections/Game.mjs";
+import AppRoutes from "./Connections/Router.mjs";
 
 const App = Express();
 const Port = process.env.PORT || 3000;
