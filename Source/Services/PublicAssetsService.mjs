@@ -1,46 +1,51 @@
+import Groups from "./GroupService.mjs"
 import Games, { CreatorTypes } from "./GameService.mjs"
 import Users from "./UserService.mjs"
-import Groups from "./GroupService.mjs"
 
 const PublicAssetsService = {}
 
 PublicAssetsService.GetPublicAssets = async function (UserID) {
-  const Result = {
-    UserPasses: [],
-    UserMerch: [],
-    GroupPasses: [],
-    GroupMerch: []
-  }
+	const UserPasses = []
+	const UserMerch = []
+	const GroupPasses = []
+	const GroupMerch = []
 
-  const UserGames = await Games.Get(UserID, CreatorTypes.User) || []
-  for (const Game of UserGames) {
-    if (Game.PlaceID) {
-      const Passes = await Games.GetPasses(Game.PlaceID, CreatorTypes.User, UserID)
-      if (Array.isArray(Passes)) Result.UserPasses.push(...Passes)
-    }
-  }
+	const GamesList = await Games.Get(UserID, CreatorTypes.User)
+	const UserStore = await Users.GetStoreAssets(UserID, CreatorTypes.User, UserID)
 
-  const UserStore = await Users.GetStoreAssets(UserID, CreatorTypes.User, UserID)
-  if (Array.isArray(UserStore)) Result.UserMerch.push(...UserStore)
+	for (const Game of GamesList) {
+		if (!Game.PlaceID) continue
 
-  const UserGroups = await Groups.Get(UserID) || []
-  for (const Group of UserGroups) {
-    const GroupID = Group.ID
-    if (!GroupID) continue
+		const Passes = await Games.GetPasses(Game.PlaceID, CreatorTypes.User, UserID)
+		UserPasses.push(...Passes)
+	}
 
-    const GroupStore = await Users.GetStoreAssets(GroupID, CreatorTypes.Group, GroupID)
-    if (Array.isArray(GroupStore)) Result.GroupMerch.push(...GroupStore)
+	UserMerch.push(...UserStore)
 
-    const GroupGames = await Games.Get(GroupID, CreatorTypes.Group) || []
-    for (const Game of GroupGames) {
-      if (Game.PlaceID) {
-        const Passes = await Games.GetPasses(Game.PlaceID, CreatorTypes.Group, GroupID)
-        if (Array.isArray(Passes)) Result.GroupPasses.push(...Passes)
-      }
-    }
-  }
+	const GroupsList = await Groups.Get(UserID)
 
-  return Result
+	for (const Group of GroupsList) {
+		const GroupID = Group.ID
+		if (!GroupID) continue
+
+		const GroupStore = await Users.GetStoreAssets(GroupID, CreatorTypes.Group, GroupID)
+		GroupMerch.push(...GroupStore)
+
+		const GroupGames = await Games.Get(GroupID, CreatorTypes.Group)
+		for (const Game of GroupGames) {
+			if (!Game.PlaceID) continue
+
+			const Passes = await Games.GetPasses(Game.PlaceID, CreatorTypes.Group, GroupID)
+			GroupPasses.push(...Passes)
+		}
+	}
+
+	return {
+		UserPasses,
+		UserMerch,
+		GroupPasses,
+		GroupMerch
+	}
 }
 
 export default PublicAssetsService
