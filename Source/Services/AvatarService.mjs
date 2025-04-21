@@ -2,26 +2,33 @@ import { ToPascalCaseObject } from "../Utilities/ToPascal.mjs";
 
 export default async function GetAvatarAssets(UserID) {
 	const Response = await fetch(`https://avatar.roblox.com/v1/users/${UserID}/avatar-appearance`);
-	if (!Response.ok) throw new Error("Failed to fetch avatar");
+	const Body = await Response.text();
 
-	const Data = await Response.json();
+	if (!Response.ok) {
+		console.error("[AvatarService] Failed fetch:", Response.status, Body);
+		throw new Error("Failed to fetch avatar");
+	}
+
+	const Data = JSON.parse(Body);
+
+	if (!Array.isArray(Data.assetIds)) return [];
 
 	const DetailedAssets = await Promise.all(
 		Data.assetIds.map(async (AssetID) => {
 			try {
 				const Res = await fetch(`https://catalog.roblox.com/v1/catalog/items/${AssetID}/details`);
-				const AssetData = await Res.json();
+				const AssetBody = await Res.text();
+				const AssetData = JSON.parse(AssetBody);
 
-				const Formatted = {
-					ID: AssetID,
-					Name: AssetData.name || null,
-					Type: AssetData.assetType || null,
-					Thumbnail: AssetData.thumbnailUrl || null
-				};
+				return ToPascalCaseObject({
+					id: AssetID,
+					name: AssetData.name || null,
+					type: AssetData.assetType || null,
+					thumbnail: AssetData.thumbnailUrl || null
+				});
 
-				return ToPascalCaseObject(Formatted);
-
-			} catch {
+			} catch (Error) {
+				console.warn("[AvatarService] Failed to fetch asset:", AssetID, Error);
 				return null;
 			}
 		})
