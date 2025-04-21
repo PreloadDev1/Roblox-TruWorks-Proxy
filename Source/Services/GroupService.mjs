@@ -29,6 +29,7 @@ Groups.Get = async function (UserID) {
 			if (!Group || !Row.role || Row.role.rank !== 255) return null
 
 			const GroupID = Group.id
+
 			const Res = await fetch(`https://groups.roblox.com/v1/groups/${GroupID}`)
 			if (!Res.ok) return null
 
@@ -38,7 +39,7 @@ Groups.Get = async function (UserID) {
 			const Favourites = GamesList.reduce((Sum, G) => Sum + (G.Favourites || 0), 0)
 			const ActivePlayers = GamesList.reduce((Sum, G) => Sum + (G.ActivePlayers || 0), 0)
 
-			const Passes = (
+			const GamePasses = (
 				await Promise.all(
 					GamesList.map((Game) =>
 						Games.GetPasses(Game.PlaceID, CreatorTypes.Group, GroupID)
@@ -58,7 +59,7 @@ Groups.Get = async function (UserID) {
 				Games: GamesList,
 				ActivePlayers: ActivePlayers,
 				Favourites: Favourites,
-				Passes: Passes,
+				Passes: GamePasses,
 				Merch: Merch || []
 			}
 		}
@@ -77,7 +78,7 @@ Groups.GetSingle = async function (GroupID, OwnerID = null) {
 	const Favourites = GamesList.reduce((Sum, G) => Sum + (G.Favourites || 0), 0)
 	const ActivePlayers = GamesList.reduce((Sum, G) => Sum + (G.ActivePlayers || 0), 0)
 
-	const Passes = (
+	const GamePasses = (
 		await Promise.all(
 			GamesList.map((Game) =>
 				Games.GetPasses(Game.PlaceID, CreatorTypes.Group, GroupID)
@@ -97,7 +98,7 @@ Groups.GetSingle = async function (GroupID, OwnerID = null) {
 		Games: GamesList,
 		ActivePlayers: ActivePlayers,
 		Favourites: Favourites,
-		Passes: Passes,
+		Passes: GamePasses,
 		Merch: Merch || []
 	}
 }
