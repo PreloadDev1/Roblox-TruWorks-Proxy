@@ -3,173 +3,142 @@ import Games, { CreatorTypes } from "./GameService.mjs"
 import Users from "./UserService.mjs"
 import PublicAssets from "./PublicAssetsService.mjs"
 
-const Profile = {}
-
-function ParseDate(DateString) {
-	if (!DateString) return null
-
-	const Date = new globalThis.Date(DateString)
-
-	return {
-		Year: Date.getUTCFullYear(),
-		Month: Date.getUTCMonth() + 1,
-		Day: Date.getUTCDate(),
-		Hour: Date.getUTCHours(),
-		Minute: Date.getUTCMinutes(),
-		Second: Date.getUTCSeconds(),
-		Millisecond: Date.getUTCMilliseconds()
-	}
+function ParseDate(dateString) {
+  if (!dateString) return null
+  const d = new Date(dateString)
+  return {
+    Year: d.getUTCFullYear(),
+    Month: d.getUTCMonth() + 1,
+    Day: d.getUTCDate(),
+    Hour: d.getUTCHours(),
+    Minute: d.getUTCMinutes(),
+    Second: d.getUTCSeconds(),
+    Millisecond: d.getUTCMilliseconds()
+  }
 }
 
-Profile.GetBasicInfo = async function (UserID) {
-	const Res = await fetch(`https://users.roblox.com/v1/users/${UserID}`)
-	if (!Res.ok) throw new Error("Failed to fetch basic info")
+class Profile {
+  static async GetBasicInfo(userID) {
+    const res = await fetch(`https://users.roblox.com/v1/users/${userID}`)
+    if (!res.ok) throw new Error("Failed to fetch basic info")
+    const data = await res.json()
+    return {
+      UserID: data.id,
+      Username: data.name,
+      DisplayName: data.displayName,
+      Description: data.description,
+      IsBanned: data.isBanned,
+      IsVerified: data.hasVerifiedBadge,
+      Created: ParseDate(data.created)
+    }
+  }
 
-	const Data = await Res.json()
+  static async GetSocialLinks(userID) {
+    const res = await fetch(`https://users.roblox.com/v1/users/${userID}/social-links`)
+    if (!res.ok) return []
+    const data = await res.json()
+    return data.data || []
+  }
 
-	return {
-		UserID: Data.id,
-		Username: Data.name,
-		DisplayName: Data.displayName,
-		Description: Data.description,
-		IsBanned: Data.isBanned,
-		IsVerified: Data.hasVerifiedBadge,
-		Created: ParseDate(Data.created)
-	}
-}
+  static async GetFavoriteCounts(universeID) {
+    const res = await fetch(`https://games.roblox.com/v1/games/${universeID}/votes`)
+    if (!res.ok) return { Favourites: 0 }
+    const data = await res.json()
+    return { Favourites: data.favoritedCount || 0 }
+  }
 
-Profile.GetSocialLinks = async function (UserID) {
-	const Res = await fetch(`https://users.roblox.com/v1/users/${UserID}/social-links`)
-	if (!Res.ok) return []
+  static async GetDevProducts(userID) {
+    const games = await Games.Get(userID, CreatorTypes.User)
+    const all = []
+    for (const g of games) {
+      const prods = await Games.GetDevProducts(g.UniverseID, CreatorTypes.User, userID)
+      all.push(...prods)
+    }
+    return all
+  }
 
-	const Data = await Res.json()
-	return Data?.data || []
-}
+  static async GetBadges(userID) {
+    return Users.GetBadges(userID)
+  }
 
-Profile.GetFavoriteCounts = async function (UniverseID) {
-	const Res = await fetch(`https://games.roblox.com/v1/games/${UniverseID}/votes`)
-	if (!Res.ok) return { Favourites: 0 }
+  static async GetFollowers(userID) {
+    return Users.GetFollowers(userID)
+  }
 
-	const Data = await Res.json()
-	return { Favourites: Data.favoritedCount || 0 }
-}
+  static async GetFriends(userID) {
+    return Users.GetFriends(userID)
+  }
 
-Profile.GetDevProducts = async function (UserID) {
-	const GamesList = await Games.Get(UserID, CreatorTypes.User)
-	const All = []
+  static async GetPublicAssets(userID) {
+    const base = {
+      UserID: userID,
+      Username: null,
+      DisplayName: null,
+      Description: null,
+      IsBanned: false,
+      IsVerified: false,
+      Created: null,
+      FollowerCount: 0,
+      Followers: [],
+      FriendsCount: 0,
+      Friends: [],
+      BadgeCount: 0,
+      Badges: [],
+      SocialLinks: [],
+      UserPasses: [],
+      UserMerch: [],
+      GroupPasses: [],
+      GroupMerch: [],
+      DevProducts: [],
+      Games: []
+    }
 
-	for (const Game of GamesList) {
-		const Products = await Games.GetDevProducts(Game.UniverseID, CreatorTypes.User, UserID)
-		All.push(...Products)
-	}
+    const [
+      basic,
+      followers,
+      friends,
+      badges,
+      socials,
+      games,
+      groups,
+      assets
+    ] = await Promise.all([
+      Profile.GetBasicInfo(userID),
+      Profile.GetFollowers(userID),
+      Profile.GetFriends(userID),
+      Profile.GetBadges(userID),
+      Profile.GetSocialLinks(userID),
+      Games.Get(userID, CreatorTypes.User),
+      Groups.Get(userID),
+      PublicAssets.GetAll(userID)
+    ])
 
-	return All
-}
+    Object.assign(base, basic)
 
-Profile.GetBadges = async function (UserID) {
-	return await Users.GetBadges(UserID)
-}
+    base.FollowerCount = followers.Count
+    base.Followers = followers.List
 
-Profile.GetFollowers = async function (UserID) {
-	return await Users.GetFollowers(UserID)
-}
+    base.FriendsCount = friends.Count
+    base.Friends = friends.List
 
-Profile.GetFriends = async function (UserID) {
-	return await Users.GetFriends(UserID)
-}
+    base.BadgeCount = badges.Count
+    base.Badges = badges.List
 
-Profile.GetPublicAssets = async function (UserID) {
-	const Result = {
-		UserID,
-		Username: null,
-		DisplayName: null,
-		Description: null,
-		IsBanned: false,
-		IsVerified: false,
-		Created: null,
-		FollowerCount: 0,
-		Followers: [],
-		FriendsCount: 0,
-		Friends: [],
-		Following: [],
-		BadgeCount: 0,
-		Badges: [],
-		SocialLinks: [],
-		UserPasses: [],
-		GroupPasses: [],
-		UserMerch: [],
-		GroupMerch: [],
-		DevProducts: [],
-		Games: []
-	}
+    base.SocialLinks = socials
 
-	try {
-		const [
-			Basic,
-			Followers,
-			Friends,
-			Badges,
-			Socials,
-			UserGames,
-			GroupsList,
-			Assets
-		] = await Promise.all([
-			Profile.GetBasicInfo(UserID),
-			Profile.GetFollowers(UserID),
-			Profile.GetFriends(UserID),
-			Profile.GetBadges(UserID),
-			Profile.GetSocialLinks(UserID),
-			Games.Get(UserID, CreatorTypes.User),
-			Groups.Get(UserID),
-			PublicAssets.GetAll(UserID)
-		])
+    base.UserPasses = assets.UserPasses
+    base.UserMerch = assets.UserMerch
+    base.GroupPasses = assets.GroupPasses
+    base.GroupMerch = assets.GroupMerch
 
-		Object.assign(Result, Basic)
+    for (const g of games) {
+      const fav = await Profile.GetFavoriteCounts(g.UniverseID)
+      g.Favourites = fav.Favourites
+      base.Games.push(g)
+    }
 
-		Result.FollowerCount = Followers.Count
-		Result.Followers = Followers.List
-
-		Result.FriendsCount = Friends.Count
-		Result.Friends = Friends.List
-
-		Result.BadgeCount = Badges.Count
-		Result.Badges = Badges.List
-
-		Result.SocialLinks = Socials
-
-		Result.UserPasses = Assets.UserPasses
-		Result.UserMerch = Assets.UserMerch
-		Result.GroupPasses = Assets.GroupPasses
-		Result.GroupMerch = Assets.GroupMerch
-
-		for (const Game of UserGames) {
-			const [Favorites, DevProducts] = await Promise.all([
-				Profile.GetFavoriteCounts(Game.UniverseID),
-				Games.GetDevProducts(Game.UniverseID, CreatorTypes.User, UserID)
-			])
-
-			Game.Favourites = Favorites.Favourites
-			Result.DevProducts.push(...DevProducts)
-			Result.Games.push(Game)
-		}
-
-		for (const Group of GroupsList) {
-			for (const Game of Group.Games || []) {
-				const [Favorites, DevProducts] = await Promise.all([
-					Profile.GetFavoriteCounts(Game.UniverseID),
-					Games.GetDevProducts(Game.UniverseID, CreatorTypes.Group, Group.ID)
-				])
-
-				Game.Favourites = Favorites.Favourites
-				Result.DevProducts.push(...DevProducts)
-				Result.Games.push(Game)
-			}
-		}
-	} catch (err) {
-		console.error("[Profile.GetPublicAssets]", err)
-	}
-
-	return Result
+    return base
+  }
 }
 
 export default Profile
