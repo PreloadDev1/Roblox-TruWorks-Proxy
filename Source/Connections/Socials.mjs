@@ -1,20 +1,21 @@
 import Express from "express"
-import Profile from "../Services/ProfileService.mjs"
+import ProfileService from "../Services/ProfileService.mjs"
 
 const Router = Express.Router()
 
 Router.get("/:UserID", async (Request, Response) => {
-	try {
-		const UserID = parseInt(Request.params.UserID)
-		if (isNaN(UserID)) return Response.status(400).json({ Error: "Invalid User ID" })
+  const UserID = parseInt(Request.params.UserID)
 
-		const SocialLinks = await Profile.GetSocialLinks(UserID)
-		Response.json(SocialLinks)
+  if (isNaN(UserID)) {
+    return Response.status(400).json({ Error: "Invalid User ID" })
+  }
 
-	} catch (Error) {
-		console.error("[/socials/:UserID]", Error)
-		Response.status(500).json({ Error: "Failed to fetch social links" })
-	}
+  try {
+    const SocialLinks = await ProfileService.GetSocialLinks(UserID)
+    Response.json(SocialLinks)
+  } catch {
+    Response.status(500).json({ Error: "Failed to fetch social links" })
+  }
 })
 
 export default Router
