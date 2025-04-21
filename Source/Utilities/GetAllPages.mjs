@@ -7,7 +7,10 @@ export async function GetAllPages(BaseURL, FilterFunction) {
 		const URL = `${BaseURL}${Cursor ? `&cursor=${Cursor}` : ""}`;
 		const Response = await fetch(URL);
 
-		if (!Response.ok) break;
+		if (!Response.ok) {
+			console.warn("[GetAllPages] Failed to fetch:", URL, Response.status);
+			break;
+		}
 
 		const Data = await Response.json();
 		if (!Array.isArray(Data.data)) break;
