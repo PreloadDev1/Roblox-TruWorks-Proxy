@@ -1,12 +1,12 @@
 import Groups from "./GroupService.mjs";
 import Games, { CreatorTypes } from "./GameService.mjs";
 import Users from "./UserService.mjs";
-import { ToPascalCaseObject } from "../Utilities/ToPascal.mjs";
 
 const Profile = {};
 
 function ParseDate(DateString) {
 	if (!DateString) return null;
+
 	const Date = new Date(DateString);
 	return {
 		Year: Date.getUTCFullYear(),
@@ -22,6 +22,7 @@ function ParseDate(DateString) {
 Profile.GetBasicInfo = async function (UserID) {
 	const Response = await fetch(`https://users.roblox.com/v1/users/${UserID}`);
 	if (!Response.ok) throw new Error("Failed to fetch user profile");
+
 	const Data = await Response.json();
 
 	return {
@@ -38,13 +39,15 @@ Profile.GetBasicInfo = async function (UserID) {
 Profile.GetSocialLinks = async function (UserID) {
 	const Response = await fetch(`https://users.roblox.com/v1/users/${UserID}/social-links`);
 	if (!Response.ok) return [];
+
 	const Data = await Response.json();
-	return Data?.data?.map(ToPascalCaseObject) || [];
+	return Data?.data || [];
 };
 
 Profile.GetFavoriteCounts = async function (UniverseID) {
 	const Response = await fetch(`https://games.roblox.com/v1/games/${UniverseID}/votes`);
 	if (!Response.ok) return { Favorites: 0 };
+
 	const Data = await Response.json();
 	return { Favorites: Data.favoritedCount || 0 };
 };
@@ -75,7 +78,7 @@ Profile.GetFriends = async function (UserID) {
 
 Profile.GetPublicAssets = async function (UserID) {
 	const Result = {
-		UserID: UserID,
+		UserID,
 		Username: null,
 		DisplayName: null,
 		Description: null,
@@ -118,12 +121,16 @@ Profile.GetPublicAssets = async function (UserID) {
 		]);
 
 		Object.assign(Result, BasicInfo);
+
 		Result.FollowerCount = Followers.Count;
 		Result.Followers = Followers.List;
+
 		Result.FriendsCount = Friends.Count;
 		Result.Friends = Friends.List;
+
 		Result.BadgeCount = Badges.Count;
 		Result.Badges = Badges.List;
+
 		Result.SocialLinks = SocialLinks;
 
 		const UserMerch = await Users.GetStoreAssets(UserID, CreatorTypes.User, UserID);
@@ -175,7 +182,6 @@ Profile.GetPublicAssets = async function (UserID) {
 				Result.DevProducts.push(...(DevProducts || []));
 			}
 		}
-
 	} catch (Error) {
 		console.error("[Profile.GetPublicAssets] Error:", Error);
 	}
