@@ -1,7 +1,7 @@
 import filterJSON from "../Utilities/FilterJson.mjs";
-import Groups from "./groups.mjs";
-import Games, { CreatorTypes } from "./games.mjs";
-import Users from "./users.mjs";
+import Groups from "./GroupService.mjs";
+import Games, { CreatorTypes } from "./GameService.mjs";
+import Users from "./UserService.mjs";
 
 const Profile = {};
 
