@@ -1,4 +1,4 @@
-import filterJSON from "../Utilities/FilterJson.mjs";
+import FilterJSON from "../Utilities/FilterJson.mjs";
 import { GetThumbnail } from "./ThumbnailService.mjs";
 import Profile from "./ProfileService.mjs";
 import { ToPascalCaseObject } from "../Utilities/ToPascal.mjs";
@@ -11,15 +11,15 @@ const CreatorTypes = {
 };
 
 function ParseDate(DateString) {
-	const DateObj = new Date(DateString);
+	const Date = new globalThis.Date(DateString);
 	return {
-		Year: DateObj.getUTCFullYear(),
-		Month: DateObj.getUTCMonth() + 1,
-		Day: DateObj.getUTCDate(),
-		Hour: DateObj.getUTCHours(),
-		Minute: DateObj.getUTCMinutes(),
-		Second: DateObj.getUTCSeconds(),
-		Millisecond: DateObj.getUTCMilliseconds()
+		Year: Date.getUTCFullYear(),
+		Month: Date.getUTCMonth() + 1,
+		Day: Date.getUTCDate(),
+		Hour: Date.getUTCHours(),
+		Minute: Date.getUTCMinutes(),
+		Second: Date.getUTCSeconds(),
+		Millisecond: Date.getUTCMilliseconds()
 	};
 }
 
@@ -27,9 +27,9 @@ Games.Get = async function (CreatorID, CreatorType) {
 	const URI = CreatorType === CreatorTypes.User ? "users" : "groups";
 
 	const BaseGames = await FilterJSON({
-		url: `https://games.roblox.com/v2/${URI}/${CreatorID}/games?accessFilter=2&limit=50&sortOrder=Asc`,
-		exhaust: true,
-		filter: (Game) => ({
+		URL: `https://games.roblox.com/v2/${URI}/${CreatorID}/games?accessFilter=2&limit=50&sortOrder=Asc`,
+		Exhaust: true,
+		Filter: (Game) => ({
 			UniverseID: Game.id,
 			PlaceID: Game.rootPlace?.id
 		})
@@ -69,7 +69,7 @@ Games.Get = async function (CreatorID, CreatorType) {
 				} catch {}
 			}
 
-			FinalGames.push({
+			const FormattedGame = {
 				AllowedGearCategories: Game.allowedGearCategories || [],
 				AllowedGearGenres: Game.allowedGearGenres || [],
 				CopyingAllowed: Game.copyingAllowed,
@@ -96,10 +96,10 @@ Games.Get = async function (CreatorID, CreatorType) {
 				UpVotes: Game.upVotes,
 				DownVotes: Game.downVotes,
 				Thumbnail: await GetThumbnail(Game.id, "GameIcon")
-			});
-		} catch (Err) {
-			console.warn(`[Games.Get] Failed to enrich game ${Entry.UniverseID}:`, Err);
-		}
+			};
+
+			FinalGames.push(ToPascalCaseObject(FormattedGame));
+		} catch {}
 	}
 
 	return FinalGames;
@@ -107,31 +107,33 @@ Games.Get = async function (CreatorID, CreatorType) {
 
 Games.GetPasses = async function (UniverseID, CreatorType, CreatorID) {
 	return await FilterJSON({
-		url: `https://games.roblox.com/v1/games/${UniverseID}/game-passes?limit=100&sortOrder=Asc`,
-		exhaust: true,
-		filter: async (Pass) => ({
-			ID: Pass.id,
-			Name: Pass.name,
-			Price: Pass.price,
-			Thumbnail: Pass.thumbnail?.imageUrl || await GetThumbnail(Pass.id, "Asset"),
-			CreatorType,
-			CreatorID
-		})
+		URL: `https://games.roblox.com/v1/games/${UniverseID}/game-passes?limit=100&sortOrder=Asc`,
+		Exhaust: true,
+		Filter: async (Pass) =>
+			ToPascalCaseObject({
+				ID: Pass.id,
+				Name: Pass.name,
+				Price: Pass.price,
+				Thumbnail: Pass.thumbnail?.imageUrl || (await GetThumbnail(Pass.id, "Asset")),
+				CreatorType,
+				CreatorID
+			})
 	});
 };
 
 Games.GetDevProducts = async function (UniverseID, CreatorType, CreatorID) {
 	return await FilterJSON({
-		url: `https://games.roblox.com/v1/games/${UniverseID}/developer-products?limit=50`,
-		exhaust: true,
-		filter: async (Product) => ({
-			ID: Product.id,
-			Name: Product.name,
-			Price: Product.priceInRobux,
-			CreatorType,
-			CreatorID,
-			Thumbnail: await GetThumbnail(Product.id, "Asset")
-		})
+		URL: `https://games.roblox.com/v1/games/${UniverseID}/developer-products?limit=50`,
+		Exhaust: true,
+		Filter: async (Product) =>
+			ToPascalCaseObject({
+				ID: Product.id,
+				Name: Product.name,
+				Price: Product.priceInRobux,
+				CreatorType,
+				CreatorID,
+				Thumbnail: await GetThumbnail(Product.id, "Asset")
+			})
 	});
 };
 
