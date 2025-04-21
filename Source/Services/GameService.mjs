@@ -1,6 +1,7 @@
 import filterJSON from "../Utilities/FilterJson.mjs";
 import { GetThumbnail } from "./ThumbnailService.mjs";
 import Profile from "./ProfileService.mjs";
+import { ToPascalCaseObject } from "../Utilities/FilterJson.mjs";
 
 const Games = {};
 
