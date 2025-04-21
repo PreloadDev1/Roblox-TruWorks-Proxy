@@ -1,93 +1,90 @@
 import { GetAllPages } from "../Utilities/GetAllPages.mjs"
 import { GetMarketInfo } from "../Utilities/FilterJson.mjs"
 
-const Users = {}
+class Users {
+  static async GetStoreAssets(TargetID, CreatorType, CreatorID) {
+    const url = `https://catalog.roblox.com/v1/search/items/details?CreatorTargetId=${TargetID}&CreatorType=${
+      CreatorType === "Groups" ? 2 : 1
+    }&Limit=30&SortType=3`
+    return await GetAllPages(url, GetMarketInfo(CreatorType, CreatorID))
+  }
 
-Users.GetStoreAssets = async function (TargetID, CreatorType, CreatorID) {
-	const URL = `https://catalog.roblox.com/v1/search/items/details?CreatorTargetId=${TargetID}&CreatorType=${CreatorType === "Groups" ? 2 : 1}&Limit=30&SortType=3`
-	return await GetAllPages(URL, GetMarketInfo(CreatorType, CreatorID))
-}
+  static async GetFollowers(UserID) {
+    const url = `https://friends.roblox.com/v1/users/${UserID}/followers?limit=100`
+    const raw = await GetAllPages(url, (entry) => entry)
 
-Users.GetFollowers = async function (UserID) {
-	const URL = `https://friends.roblox.com/v1/users/${UserID}/followers?limit=100`
-	const Raw = await GetAllPages(URL, async (Entry) => Entry)
+    const list = await Promise.all(
+      raw.map(async ({ id }) => {
+        const res = await fetch(`https://users.roblox.com/v1/users/${id}`)
+        if (!res.ok) return null
+        const data = await res.json()
+        return {
+          UserID: data.id,
+          Username: data.name,
+          DisplayName: data.displayName,
+          Description: data.description,
+          IsBanned: data.isBanned,
+          IsVerified: data.hasVerifiedBadge,
+          Created: data.created
+        }
+      })
+    )
 
-	const Profiles = await Promise.all(
-		Raw.map(async (Entry) => {
-			try {
-				const Res = await fetch(`https://users.roblox.com/v1/users/${Entry.id}`)
-				if (!Res.ok) return null
-				const Data = await Res.json()
-				return {
-					UserID: Data.id,
-					Username: Data.name,
-					DisplayName: Data.displayName,
-					Description: Data.description,
-					IsBanned: Data.isBanned,
-					IsVerified: Data.hasVerifiedBadge,
-					Created: Data.created
-				}
-			} catch {
-				return null
-			}
-		})
-	)
+    const filtered = list.filter(Boolean)
+    return {
+      Count: filtered.length,
+      List: filtered
+    }
+  }
 
-	return {
-		Count: Profiles.length,
-		List: Profiles.filter(Boolean)
-	}
-}
+  static async GetFriends(UserID) {
+    const url = `https://friends.roblox.com/v1/users/${UserID}/friends?limit=100`
+    const raw = await GetAllPages(url, (entry) => entry)
 
-Users.GetFriends = async function (UserID) {
-	const URL = `https://friends.roblox.com/v1/users/${UserID}/friends`
-	const Raw = await GetAllPages(URL, async (Entry) => Entry)
+    const list = await Promise.all(
+      raw.map(async ({ id }) => {
+        const res = await fetch(`https://users.roblox.com/v1/users/${id}`)
+        if (!res.ok) return null
+        const data = await res.json()
+        return {
+          UserID: data.id,
+          Username: data.name,
+          DisplayName: data.displayName,
+          Description: data.description,
+          IsBanned: data.isBanned,
+          IsVerified: data.hasVerifiedBadge,
+          Created: data.created
+        }
+      })
+    )
 
-	const Profiles = await Promise.all(
-		Raw.map(async (Entry) => {
-			try {
-				const Res = await fetch(`https://users.roblox.com/v1/users/${Entry.id}`)
-				if (!Res.ok) return null
-				const Data = await Res.json()
-				return {
-					UserID: Data.id,
-					Username: Data.name,
-					DisplayName: Data.displayName,
-					Description: Data.description,
-					IsBanned: Data.isBanned,
-					IsVerified: Data.hasVerifiedBadge,
-					Created: Data.created
-				}
-			} catch {
-				return null
-			}
-		})
-	)
+    const filtered = list.filter(Boolean)
+    return {
+      Count: filtered.length,
+      List: filtered
+    }
+  }
 
-	return {
-		Count: Profiles.length,
-		List: Profiles.filter(Boolean)
-	}
-}
+  static async GetBadges(UserID) {
+    const url = `https://badges.roblox.com/v1/users/${UserID}/badges?limit=100`
+    const raw = await GetAllPages(
+      url,
+      ({ id, name, description, awardedDate, imageUrl, statistics }) => ({
+        ID: id,
+        Name: name,
+        Description: description,
+        AwardedDate: awardedDate,
+        AwardedCount: statistics?.awardedCount || 0,
+        WinRatePercentage: statistics?.winRatePercentage || 0,
+        Thumbnail: imageUrl || null
+      })
+    )
 
-Users.GetBadges = async function (UserID) {
-	const URL = `https://badges.roblox.com/v1/users/${UserID}/badges?limit=100`
-	const Raw = await GetAllPages(URL, async (Badge) => {
-		return {
-			ID: Badge.id,
-			Name: Badge.name,
-			Description: Badge.description,
-			AwardedDate: Badge.awardedDate,
-			AwardedCount: Badge.statistics?.awardedCount || 0,
-			WinRatePercentage: Badge.statistics?.winRatePercentage || null,
-			Thumbnail: Badge.imageUrl || null
-		}
-	})
-
-	return {
-		Count: Raw.length,
-		List: Raw
-	}
+    return {
+      Count: raw.length,
+      List: raw
+    }
+  }
 }
 
 export default Users
