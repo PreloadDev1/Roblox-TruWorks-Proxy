@@ -1,12 +1,11 @@
 import FilterJSON from "../Utilities/FilterJson.mjs";
-import { ToPascalCaseObject } from "../Utilities/ToPascal.mjs";
 import Games, { CreatorTypes } from "./GameService.mjs";
 import Users from "./UserService.mjs";
 
 function ParseDate(DateString) {
 	if (!DateString) return null;
 
-	const Date = new globalThis.Date(DateString);
+	const Date = new Date(DateString);
 
 	return {
 		Year: Date.getUTCFullYear(),
@@ -51,7 +50,7 @@ Groups.Get = async function (UserID) {
 
 			const Merch = await Users.GetStoreAssets(GroupID, CreatorTypes.Group, GroupID);
 
-			return ToPascalCaseObject({
+			return {
 				OwnerID: UserID,
 				ID: GroupID,
 				Name: Group.name,
@@ -63,7 +62,7 @@ Groups.Get = async function (UserID) {
 				Favourites: Favourites,
 				GamePasses: GamePasses,
 				Merch: Merch || []
-			});
+			};
 		}
 	});
 
@@ -90,7 +89,7 @@ Groups.GetSingle = async function (GroupID, OwnerID = null) {
 
 	const Merch = await Users.GetStoreAssets(GroupID, CreatorTypes.Group, GroupID);
 
-	return ToPascalCaseObject({
+	return {
 		OwnerID: OwnerID,
 		ID: GroupID,
 		Name: Info.name,
@@ -102,22 +101,21 @@ Groups.GetSingle = async function (GroupID, OwnerID = null) {
 		Favourites: Favourites,
 		GamePasses: GamePasses,
 		Merch: Merch || []
-	});
+	};
 };
 
 Groups.GetStoreAssets = async function (GroupID) {
 	return await FilterJSON({
 		URL: `https://catalog.roblox.com/v1/search/items?CreatorTargetId=${GroupID}&CreatorType=2&Limit=30&SortType=3`,
 		Exhaust: true,
-		Filter: async (Item) =>
-			ToPascalCaseObject({
-				ID: Item.id,
-				Name: Item.name,
-				Price: Item.price,
-				CreatorID: GroupID,
-				CreatorType: "Groups",
-				Thumbnail: Item.thumbnail?.imageUrl || null
-			})
+		Filter: async (Item) => ({
+			ID: Item.id,
+			Name: Item.name,
+			Price: Item.price,
+			CreatorID: GroupID,
+			CreatorType: "Groups",
+			Thumbnail: Item.thumbnail?.imageUrl || null
+		})
 	});
 };
 
