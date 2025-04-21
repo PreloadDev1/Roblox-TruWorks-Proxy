@@ -12,12 +12,14 @@ export default async function GetAvatarAssets(UserID) {
 				const Res = await fetch(`https://catalog.roblox.com/v1/catalog/items/${AssetID}/details`);
 				const AssetData = await Res.json();
 
-				return {
+				const Formatted = {
 					ID: AssetID,
 					Name: AssetData.name || null,
 					Type: AssetData.assetType || null,
 					Thumbnail: AssetData.thumbnailUrl || null
 				};
+
+				return ToPascalCaseObject(Formatted);
 
 			} catch {
 				return null;
