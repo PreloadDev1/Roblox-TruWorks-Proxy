@@ -1,6 +1,6 @@
 import filterJSON from "../Utilities/FilterJson.mjs";
-import Games, { CreatorTypes } from "./games.mjs";
-import Users from "./users.mjs";
+import Games, { CreatorTypes } from "./GameService.mjs";
+import Users from "./UserService.mjs";
 
 function ParseDateParts(DateString) {
 	if (!DateString) return null;
