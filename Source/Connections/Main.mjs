@@ -1,51 +1,35 @@
-import Groups from "../Services/GroupService.mjs"
-import Games, { CreatorTypes } from "../Services/GameService.mjs"
-import Users from "../Services/UserService.mjs"
+import Express from "express"
+import AvatarRouter from "./Avatar.mjs"
+import BadgesRouter from "./Badges.mjs"
+import DevProductsRouter from "./DevProducts.mjs"
+import FollowersRouter from "./Followers.mjs"
+import FriendsRouter from "./Friends.mjs"
+import GameRouter from "./Game.mjs"
+import GroupRouter from "./Group.mjs"
+import ProfileRouter from "./Profile.mjs"
+import SocialsRouter from "./Socials.mjs"
+import AssetsRouter from "./Assets.mjs"
 
-export default async function GetPublicAssets(UserID) {
-	const Result = {
-		UserPasses: [],
-		UserMerch: [],
-		GroupPasses: [],
-		GroupMerch: []
-	}
+const Router = Express.Router()
 
-	try {
-		const GamesList = await Games.Get(UserID, CreatorTypes.User)
-		const UserStore = await Users.GetStoreAssets(UserID, CreatorTypes.User, UserID)
+Router.use("/avatar", AvatarRouter)
 
-		for (const Game of GamesList || []) {
-			if (!Game.PlaceID) continue
+Router.use("/games", GameRouter)
 
-			const Passes = await Games.GetPasses(Game.PlaceID, CreatorTypes.User, UserID)
-			if (Array.isArray(Passes)) Result.UserPasses.push(...Passes)
-		}
+Router.use("/groups", GroupRouter)
 
-		if (Array.isArray(UserStore)) {
-			Result.UserMerch.push(...UserStore)
-		}
+Router.use("/profile/:UserID/socials", SocialsRouter)
 
-		const GroupsList = await Groups.Get(UserID)
+Router.use("/profile", ProfileRouter)
 
-		for (const Group of GroupsList || []) {
-			const GroupID = Group.ID
-			if (!GroupID) continue
+Router.use("/assets", AssetsRouter)
 
-			const GroupStore = await Users.GetStoreAssets(GroupID, CreatorTypes.Group, GroupID)
-			if (Array.isArray(GroupStore)) Result.GroupMerch.push(...GroupStore)
+Router.use("/badges", BadgesRouter)
 
-			const GroupGames = await Games.Get(GroupID, CreatorTypes.Group)
+Router.use("/devproducts", DevProductsRouter)
 
-			for (const Game of GroupGames || []) {
-				if (!Game.PlaceID) continue
+Router.use("/followers", FollowersRouter)
 
-				const Passes = await Games.GetPasses(Game.PlaceID, CreatorTypes.Group, GroupID)
-				if (Array.isArray(Passes)) Result.GroupPasses.push(...Passes)
-			}
-		}
-	} catch (Error) {
-		console.error("[GetPublicAssets] Error:", Error)
-	}
+Router.use("/friends", FriendsRouter)
 
-	return Result
-}
+export default Router
