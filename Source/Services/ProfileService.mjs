@@ -1,7 +1,8 @@
 import Games, { CreatorTypes } from "./GameService.mjs";
 import Groups from "./GroupService.mjs";
 import Users from "./UserService.mjs";
-import { GetMarketInfo, ToPascalCaseObject } from "../Utilities/FilterJson.mjs";
+import { GetMarketInfo } from "../Utilities/FilterJson.mjs";
+import { ToPascalCaseObject } from "../Utilities/ToPascal.mjs";
 
 const Profile = {};
 
