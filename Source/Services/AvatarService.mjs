@@ -1,5 +1,3 @@
-import { ToPascalCaseObject } from "../Utilities/ToPascal.mjs";
-
 export default async function GetAvatarAssets(UserID) {
 	const Res = await fetch(`https://avatar.roblox.com/v1/users/${UserID}/avatar-appearance`);
 	const Body = await Res.text();
@@ -19,12 +17,13 @@ export default async function GetAvatarAssets(UserID) {
 				const AssetBody = await AssetRes.text();
 				const AssetData = JSON.parse(AssetBody);
 
-				return ToPascalCaseObject({
-					id: AssetID,
-					name: AssetData.name || null,
-					type: AssetData.assetType || null,
-					thumbnail: AssetData.thumbnailUrl || null
-				});
+				return {
+					ID: AssetID,
+					Name: AssetData.name || null,
+					Type: AssetData.assetType || null,
+					Thumbnail: AssetData.thumbnailUrl || null
+				};
+
 			} catch (err) {
 				console.warn("[AvatarService] Failed to fetch asset:", AssetID, err);
 				return null;
