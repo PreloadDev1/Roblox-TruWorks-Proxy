@@ -1,4 +1,4 @@
-import { ToPascalCaseObject } from "../Utilities/FilterJson.mjs";
+import { ToPascalCaseObject } from "../Utilities/ToPascal.mjs";
 
 export default async function GetAvatarAssets(UserID) {
 	const Response = await fetch(`https://avatar.roblox.com/v1/users/${UserID}/avatar-appearance`);
