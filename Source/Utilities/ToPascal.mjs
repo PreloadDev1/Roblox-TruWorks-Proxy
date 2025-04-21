@@ -1,7 +1,7 @@
 export function ToPascalCase(Key) {
-	return Key.replace(/(^|[^a-zA-Z0-9]+)([a-zA-Z0-9])/g, (_, __, chr) => chr.toUpperCase())
-		.replace(/Id\b/g, "ID")
-		.replace(/Url\b/g, "URL");
+	return Key.replace(/(^\w|_\w)/g, (m) => m.replace(/_/, '').toUpperCase())
+		.replace(/Id$/, "ID")
+		.replace(/Url$/, "URL");
 }
 
 export function ToPascalCaseObject(Object) {
