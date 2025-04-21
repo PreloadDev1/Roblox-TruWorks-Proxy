@@ -13,6 +13,7 @@ PublicAssetsService.GetPublicAssets = async function (userId) {
   }
 
   try {
+    // user game passes
     const userGames = await Games.Get(userId, CreatorTypes.User)
 
     for (const game of userGames) {
@@ -21,20 +22,21 @@ PublicAssetsService.GetPublicAssets = async function (userId) {
       if (Array.isArray(passes)) result.UserPasses.push(...passes)
     }
 
-    const userAssets = await Users.GetStoreAssets(userId, CreatorTypes.User, userId)
-    if (Array.isArray(userAssets)) result.UserMerch.push(...userAssets)
+    // user created merch
+    const userMerch = await Users.GetStoreAssets(userId, CreatorTypes.User, userId)
+    if (Array.isArray(userMerch)) result.UserMerch.push(...userMerch)
 
-    const groups = await Groups.Get(userId)
+    // each group’s merch & passes
+    const userGroups = await Groups.Get(userId)
 
-    for (const group of groups) {
+    for (const group of userGroups) {
       const groupId = group.ID
       if (!groupId) continue
 
-      const groupAssets = await Users.GetStoreAssets(groupId, CreatorTypes.Group, groupId)
-      if (Array.isArray(groupAssets)) result.GroupMerch.push(...groupAssets)
+      const merch = await Users.GetStoreAssets(groupId, CreatorTypes.Group, groupId)
+      if (Array.isArray(merch)) result.GroupMerch.push(...merch)
 
       const groupGames = await Games.Get(groupId, CreatorTypes.Group)
-
       for (const game of groupGames) {
         if (!game.UniverseID) continue
         const passes = await Games.GetPasses(game.UniverseID, CreatorTypes.Group, groupId)
