@@ -1,55 +1,48 @@
+import Groups from "./GroupService.mjs"
 import Games, { CreatorTypes } from "./GameService.mjs"
 import Users from "./UserService.mjs"
-import Groups from "./GroupService.mjs"
 
-export default async function GetPublicAssets(UserID) {
-  const Result = {
+export default async function GetPublicAssets(userId) {
+  const result = {
     UserPasses: [],
     UserMerch: [],
     GroupPasses: [],
     GroupMerch: []
   }
-
-  // User games → passes
-  const UserGames = await Games.Get(UserID, CreatorTypes.User)
-  for (const game of UserGames || []) {
-    const placeId = game.PlaceID
-    if (!placeId) continue
-
-    const passes = await Games.GetPasses(placeId, CreatorTypes.User, UserID)
+  
+  const userGames = await Games.Get(userId, CreatorTypes.User)
+  for (const game of userGames || []) {
+    if (!game.UniverseID) continue
+    const passes = await Games.GetPasses(game.UniverseID, CreatorTypes.User, userId)
     if (Array.isArray(passes)) {
-      Result.UserPasses.push(...passes)
+      result.UserPasses.push(...passes)
     }
   }
-
-  // User merch
-  const userMerch = await Users.GetStoreAssets(UserID, CreatorTypes.User, UserID)
+  
+  const userMerch = await Users.GetStoreAssets(userId, CreatorTypes.User, userId)
   if (Array.isArray(userMerch)) {
-    Result.UserMerch.push(...userMerch)
+    result.UserMerch.push(...userMerch)
   }
 
-  // Groups → merch & passes
-  const GroupList = await Groups.Get(UserID)
-  for (const grp of GroupList || []) {
-    const groupId = grp.ID
-    if (!groupId) continue
+  const groups = await Groups.Get(userId)
+  for (const grp of groups || []) {
+    const gid = grp.ID
+    if (!gid) continue
 
-    const merch = await Users.GetStoreAssets(groupId, CreatorTypes.Group, groupId)
+    const merch = await Users.GetStoreAssets(gid, CreatorTypes.Group, gid)
     if (Array.isArray(merch)) {
-      Result.GroupMerch.push(...merch)
+      result.GroupMerch.push(...merch)
     }
 
-    const GroupGames = await Games.Get(groupId, CreatorTypes.Group)
-    for (const game of GroupGames || []) {
-      const placeId = game.PlaceID
-      if (!placeId) continue
-
-      const passes = await Games.GetPasses(placeId, CreatorTypes.Group, groupId)
+    const groupGames = await Games.Get(gid, CreatorTypes.Group)
+    for (const game of groupGames || []) {
+      if (!game.UniverseID) continue
+      const passes = await Games.GetPasses(game.UniverseID, CreatorTypes.Group, gid)
       if (Array.isArray(passes)) {
-        Result.GroupPasses.push(...passes)
+        result.GroupPasses.push(...passes)
       }
     }
   }
 
-  return Result
+  return result
 }
