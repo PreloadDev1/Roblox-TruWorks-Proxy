@@ -1,6 +1,6 @@
 import filterJSON from "../Utilities/FilterJson.mjs";
-import { GetThumbnail } from "./thumbnails.mjs";
-import Profile from "./profile.mjs";
+import { GetThumbnail } from "./ThumbnailService.mjs";
+import Profile from "./ProfileService.mjs";
 
 const Games = {};
 
