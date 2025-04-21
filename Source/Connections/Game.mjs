@@ -1,10 +1,11 @@
-import express from "express";
+import Express from "express";
 import Profile from "../Services/ProfileService.mjs";
 
-const Router = express.Router();
+const Router = Express.Router();
 
 function ParseDateParts(DateString) {
 	const DateObj = new Date(DateString);
+
 	return {
 		Year: DateObj.getUTCFullYear(),
 		Month: DateObj.getUTCMonth() + 1,
@@ -16,30 +17,23 @@ function ParseDateParts(DateString) {
 	};
 }
 
-Router.get("/:PlaceID", async (req, res) => {
+Router.get("/:PlaceID", async (Request, Response) => {
 	try {
-		const PlaceID = parseInt(req.params.PlaceID);
-		if (isNaN(PlaceID)) {
-			return res.status(400).json({ error: "Invalid Place ID" });
-		}
+		const PlaceID = parseInt(Request.params.PlaceID);
+		if (isNaN(PlaceID)) return Response.status(400).json({ Error: "Invalid Place ID" });
 
 		const UniverseRes = await fetch(`https://apis.roblox.com/universes/v1/places/${PlaceID}/universe`);
-		if (!UniverseRes.ok) {
-			throw new Error("Invalid Place ID");
-		}
+		if (!UniverseRes.ok) throw new Error("Invalid Place ID");
 
 		const { universeId } = await UniverseRes.json();
 
 		const GameRes = await fetch(`https://games.roblox.com/v1/games?universeIds=${universeId}`);
-		if (!GameRes.ok) {
-			throw new Error("Failed to get game data");
-		}
+		if (!GameRes.ok) throw new Error("Failed to get game data");
 
 		const GameData = await GameRes.json();
 		const Game = GameData?.data?.[0];
-		if (!Game) {
-			return res.status(404).json({ error: "Game not found" });
-		}
+
+		if (!Game) return Response.status(404).json({ Error: "Game not found" });
 
 		let Creator = {
 			ID: Game.creator.id,
@@ -85,11 +79,10 @@ Router.get("/:PlaceID", async (req, res) => {
 			DownVotes: Game.downVotes
 		};
 
-		res.json(Final);
-
-	} catch (err) {
-		console.error("[/game/:PlaceID]", err);
-		res.status(500).json({ error: "Failed to fetch game info" });
+		Response.json(Final);
+	} catch (Error) {
+		console.error("[/game/:PlaceID]", Error);
+		Response.status(500).json({ Error: "Failed to fetch game info" });
 	}
 });
 
