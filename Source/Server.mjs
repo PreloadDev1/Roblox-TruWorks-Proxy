@@ -11,7 +11,7 @@ import SocialsRoutes from "./Connections/Socials.mjs";
 import GroupRoutes from "./Connections/Group.mjs";
 import GameRoutes from "./Connections/Game.mjs";
 import AppRoutes from "./Connections/Router.mjs";
-import PublicAssetsRoutes from "./Connections/PublicAssets.mjs";
+import AssetsRoutes from "./Connections/Assets.mjs";
 
 const App = Express();
 const Port = process.env.PORT || 3000;
@@ -27,7 +27,7 @@ App.use("/group", GroupRoutes);
 App.use("/game", GameRoutes);
 App.use("/avatar", AvatarRoutes);
 App.use("/profile", ProfileRoutes);
-App.use("/assets", PublicAssetsRoutes);
+App.use("/assets", AssetsRoutes);
 App.use("/", AppRoutes);
 
 App.listen(Port, () => {
