@@ -1,54 +1,41 @@
-import Groups from "./GroupService.mjs"
 import Games, { CreatorTypes } from "./GameService.mjs"
+import Groups from "./GroupService.mjs"
 import Users from "./UserService.mjs"
 
-const PublicAssets = {}
+class PublicAssets {
+  static async GetAll(userID) {
+    const result = {
+      UserPasses: [],
+      UserMerch: [],
+      GroupPasses: [],
+      GroupMerch: []
+    }
 
-PublicAssets.GetAll = async function (UserID) {
-	const Result = {
-		UserPasses: [],
-		GroupPasses: [],
-		UserMerch: [],
-		GroupMerch: []
-	}
+    const games = await Games.Get(userID, CreatorTypes.User)
+    const store = await Users.GetStoreAssets(userID, CreatorTypes.User, userID)
 
-	try {
-		const GamesList = await Games.Get(UserID, CreatorTypes.User)
-		const UserStore = await Users.GetStoreAssets(UserID, CreatorTypes.User, UserID)
+    for (const g of games) {
+      const passes = await Games.GetPasses(g.PlaceID, CreatorTypes.User, userID)
+      result.UserPasses.push(...passes)
+    }
 
-		for (const Game of GamesList) {
-			if (!Game.PlaceID) continue
+    result.UserMerch.push(...store)
 
-			const Passes = await Games.GetPasses(Game.PlaceID, CreatorTypes.User, UserID)
-			if (Array.isArray(Passes)) Result.UserPasses.push(...Passes)
-		}
+    const groups = await Groups.Get(userID)
 
-		if (Array.isArray(UserStore)) {
-			Result.UserMerch.push(...UserStore)
-		}
+    for (const grp of groups) {
+      const merch = await Users.GetStoreAssets(grp.ID, CreatorTypes.Group, grp.ID)
+      result.GroupMerch.push(...merch)
 
-		const GroupList = await Groups.Get(UserID)
+      const gg = await Games.Get(grp.ID, CreatorTypes.Group)
+      for (const g of gg) {
+        const passes = await Games.GetPasses(g.PlaceID, CreatorTypes.Group, grp.ID)
+        result.GroupPasses.push(...passes)
+      }
+    }
 
-		for (const Group of GroupList) {
-			const GroupID = Group.ID
-			if (!GroupID) continue
-
-			const GroupStore = await Users.GetStoreAssets(GroupID, CreatorTypes.Group, GroupID)
-			if (Array.isArray(GroupStore)) Result.GroupMerch.push(...GroupStore)
-
-			const GroupGames = await Games.Get(GroupID, CreatorTypes.Group)
-			for (const Game of GroupGames) {
-				if (!Game.PlaceID) continue
-
-				const Passes = await Games.GetPasses(Game.PlaceID, CreatorTypes.Group, GroupID)
-				if (Array.isArray(Passes)) Result.GroupPasses.push(...Passes)
-			}
-		}
-	} catch (err) {
-		console.error("[PublicAssets.GetAll] Failed to fetch assets", err)
-	}
-
-	return Result
+    return result
+  }
 }
 
 export default PublicAssets
