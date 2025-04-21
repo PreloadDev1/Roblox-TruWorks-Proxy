@@ -21,7 +21,27 @@ Users.GetFollowers = async function (UserID) {
 
 Users.GetFriends = async function (UserID) {
 	const URL = `https://friends.roblox.com/v1/users/${UserID}/friends?limit=100`
-	const Friends = await GetAllPages(URL, async (Entry) => Entry)
+
+	const Friends = await GetAllPages(URL, async (Entry) => {
+		try {
+			const Res = await fetch(`https://users.roblox.com/v1/users/${Entry.id}`)
+			if (!Res.ok) return null
+
+			const Info = await Res.json()
+
+			return {
+				UserID: Info.id,
+				Username: Info.name,
+				DisplayName: Info.displayName,
+				Description: Info.description,
+				IsBanned: Info.isBanned,
+				IsVerified: Info.hasVerifiedBadge,
+				Created: new Date(Info.created)
+			}
+		} catch {
+			return null
+		}
+	})
 
 	return {
 		Count: Friends.length,
