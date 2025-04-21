@@ -75,24 +75,33 @@ Users.GetBadges = async function (UserID) {
 };
 
 Users.GetFriends = async function (UserID) {
-	try {
-		const Response = await fetch(`https://friends.roblox.com/v1/users/${UserID}/friends`);
-		const Data = await Response.json();
+	const List = [];
+	let Cursor = "";
+	let HasMore = true;
 
-		const List = Array.isArray(Data.data)
-			? Data.data.map(ToPascalCaseObject)
-			: [];
+	while (HasMore) {
+		try {
+			const URL = `https://friends.roblox.com/v1/users/${UserID}/friends?limit=100${Cursor ? `&cursor=${Cursor}` : ""}`;
+			const Response = await fetch(URL);
 
-		return {
-			Count: List.length,
-			List
-		};
-	} catch {
-		return {
-			Count: 0,
-			List: []
-		};
+			if (!Response.ok) break;
+
+			const Data = await Response.json();
+			if (!Array.isArray(Data.data)) break;
+
+			List.push(...Data.data.map(ToPascalCaseObject));
+
+			Cursor = Data.nextPageCursor;
+			HasMore = !!Cursor;
+		} catch {
+			break;
+		}
 	}
+
+	return {
+		Count: List.length,
+		List
+	};
 };
 
 export default Users;
