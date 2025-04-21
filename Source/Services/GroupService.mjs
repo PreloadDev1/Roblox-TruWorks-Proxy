@@ -2,120 +2,102 @@ import FilterJSON from "../Utilities/FilterJson.mjs"
 import Games, { CreatorTypes } from "./GameService.mjs"
 import Users from "./UserService.mjs"
 
-function ParseDate(DateString) {
-	if (!DateString) return null
-
-	const Date = new globalThis.Date(DateString)
-
-	return {
-		Year: Date.getUTCFullYear(),
-		Month: Date.getUTCMonth() + 1,
-		Day: Date.getUTCDate(),
-		Hour: Date.getUTCHours(),
-		Minute: Date.getUTCMinutes(),
-		Second: Date.getUTCSeconds(),
-		Millisecond: Date.getUTCMilliseconds()
-	}
+function ParseDate(dateString) {
+  if (!dateString) return null
+  const d = new Date(dateString)
+  return {
+    Year: d.getUTCFullYear(),
+    Month: d.getUTCMonth() + 1,
+    Day: d.getUTCDate(),
+    Hour: d.getUTCHours(),
+    Minute: d.getUTCMinutes(),
+    Second: d.getUTCSeconds(),
+    Millisecond: d.getUTCMilliseconds()
+  }
 }
 
-const Groups = {}
+class Groups {
+  static async Get(userID) {
+    const roles = await FilterJSON({
+      URL: `https://groups.roblox.com/v1/users/${userID}/groups/roles?includeLocked=false`,
+      Exhaust: false,
+      Filter: async (row) => {
+        const g = row.group
+        if (!g || !row.role || row.role.rank !== 255) return null
 
-Groups.Get = async function (UserID) {
-	const GroupRoles = await FilterJSON({
-		URL: `https://groups.roblox.com/v1/users/${UserID}/groups/roles?includeLocked=false`,
-		Exhaust: false,
-		Filter: async (Row) => {
-			const Group = Row.group
-			if (!Group || !Row.role || Row.role.rank !== 255) return null
+        const res = await fetch(`https://groups.roblox.com/v1/groups/${g.id}`)
+        if (!res.ok) return null
 
-			const GroupID = Group.id
+        const info = await res.json()
+        const games = await Games.Get(g.id, CreatorTypes.Group)
 
-			const Res = await fetch(`https://groups.roblox.com/v1/groups/${GroupID}`)
-			if (!Res.ok) return null
+        const passesLists = await Promise.all(
+          games.map((gm) => Games.GetPasses(gm.PlaceID, CreatorTypes.Group, g.id))
+        )
 
-			const Info = await Res.json()
-			const GamesList = await Games.Get(GroupID, CreatorTypes.Group)
+        const merch = await Users.GetStoreAssets(g.id, CreatorTypes.Group, g.id)
 
-			const Favourites = GamesList.reduce((Sum, G) => Sum + (G.Favourites || 0), 0)
-			const ActivePlayers = GamesList.reduce((Sum, G) => Sum + (G.ActivePlayers || 0), 0)
+        return {
+          OwnerID: userID,
+          ID: g.id,
+          Name: g.name,
+          OwnerName: info.owner?.username || null,
+          Created: ParseDate(info.created),
+          Members: info.memberCount || 0,
+          Games: games,
+          ActivePlayers: games.reduce((a, x) => a + (x.ActivePlayers || 0), 0),
+          Favourites: games.reduce((a, x) => a + (x.Favourites || 0), 0),
+          Passes: passesLists.flat(),
+          Merch: merch || []
+        }
+      }
+    })
 
-			const GamePasses = (
-				await Promise.all(
-					GamesList.map((Game) =>
-						Games.GetPasses(Game.PlaceID, CreatorTypes.Group, GroupID)
-					)
-				)
-			).flat()
+    return roles
+  }
 
-			const Merch = await Users.GetStoreAssets(GroupID, CreatorTypes.Group, GroupID)
+  static async GetSingle(groupID, ownerID = null) {
+    const res = await fetch(`https://groups.roblox.com/v1/groups/${groupID}`)
+    if (!res.ok) return null
 
-			return {
-				OwnerID: UserID,
-				ID: GroupID,
-				Name: Group.name,
-				OwnerName: Info.owner?.username || null,
-				Created: ParseDate(Info.created),
-				Members: Info.memberCount || 0,
-				Games: GamesList,
-				ActivePlayers: ActivePlayers,
-				Favourites: Favourites,
-				Passes: GamePasses,
-				Merch: Merch || []
-			}
-		}
-	})
+    const info = await res.json()
+    const games = await Games.Get(groupID, CreatorTypes.Group)
 
-	return GroupRoles
-}
+    const passesLists = await Promise.all(
+      games.map((gm) => Games.GetPasses(gm.PlaceID, CreatorTypes.Group, groupID))
+    )
 
-Groups.GetSingle = async function (GroupID, OwnerID = null) {
-	const Res = await fetch(`https://groups.roblox.com/v1/groups/${GroupID}`)
-	if (!Res.ok) return null
+    const merch = await Users.GetStoreAssets(groupID, CreatorTypes.Group, groupID)
 
-	const Info = await Res.json()
-	const GamesList = await Games.Get(GroupID, CreatorTypes.Group)
+    return {
+      OwnerID: ownerID,
+      ID: groupID,
+      Name: info.name,
+      OwnerName: info.owner?.username || null,
+      Created: ParseDate(info.created),
+      Members: info.memberCount || 0,
+      Games: games,
+      ActivePlayers: games.reduce((a, x) => a + (x.ActivePlayers || 0), 0),
+      Favourites: games.reduce((a, x) => a + (x.Favourites || 0), 0),
+      Passes: passesLists.flat(),
+      Merch: merch || []
+    }
+  }
 
-	const Favourites = GamesList.reduce((Sum, G) => Sum + (G.Favourites || 0), 0)
-	const ActivePlayers = GamesList.reduce((Sum, G) => Sum + (G.ActivePlayers || 0), 0)
-
-	const GamePasses = (
-		await Promise.all(
-			GamesList.map((Game) =>
-				Games.GetPasses(Game.PlaceID, CreatorTypes.Group, GroupID)
-			)
-		)
-	).flat()
-
-	const Merch = await Users.GetStoreAssets(GroupID, CreatorTypes.Group, GroupID)
-
-	return {
-		OwnerID: OwnerID,
-		ID: GroupID,
-		Name: Info.name,
-		OwnerName: Info.owner?.username || null,
-		Created: ParseDate(Info.created),
-		Members: Info.memberCount || 0,
-		Games: GamesList,
-		ActivePlayers: ActivePlayers,
-		Favourites: Favourites,
-		Passes: GamePasses,
-		Merch: Merch || []
-	}
-}
-
-Groups.GetStoreAssets = async function (GroupID) {
-	return await FilterJSON({
-		URL: `https://catalog.roblox.com/v1/search/items?CreatorTargetId=${GroupID}&CreatorType=2&Limit=30&SortType=3`,
-		Exhaust: true,
-		Filter: async (Item) => ({
-			ID: Item.id,
-			Name: Item.name,
-			Price: Item.price,
-			CreatorID: GroupID,
-			CreatorType: "Groups",
-			Thumbnail: Item.thumbnail?.imageUrl || null
-		})
-	})
+  static async GetStoreAssets(groupID) {
+    return await FilterJSON({
+      URL: `https://catalog.roblox.com/v1/search/items?CreatorTargetId=${groupID}&CreatorType=2&Limit=30&SortType=3`,
+      Exhaust: true,
+      Filter: async (item) => ({
+        ID: item.id,
+        Name: item.name,
+        Price: item.price,
+        CreatorID: groupID,
+        CreatorType: "Groups",
+        Thumbnail: item.thumbnail?.imageUrl || null
+      })
+    })
+  }
 }
 
 export default Groups
