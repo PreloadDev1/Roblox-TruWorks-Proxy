@@ -6,7 +6,8 @@ import Profile from "./ProfileService.mjs";
 const Users = {}
 
 Users.GetStoreAssets = async function (UserID, CreatorType, CreatorID) {
-	const URL = `https://catalog.roblox.com/v1/search/items/details?CreatorTargetId=${UserID}&CreatorType=1&Limit=30`
+	const CreatorTypeID = CreatorType === "Users" ? 1 : 2
+	const URL = `https://catalog.roblox.com/v1/search/items?CreatorTargetId=${UserID}&CreatorType=${CreatorTypeID}&Limit=30&SortType=3`
 	return await GetAllPages(URL, GetMarketInfo(CreatorType, CreatorID))
 }
 
