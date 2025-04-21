@@ -1,7 +1,6 @@
 import Groups from "../Services/GroupService.mjs";
 import Games, { CreatorTypes } from "../Services/GameService.mjs";
 import Users from "../Services/UserService.mjs";
-import { ToPascalCaseObject } from "../Utilities/ToPascal.mjs";
 
 export default async function GetPublicAssets(UserID) {
 	const Result = {
@@ -44,5 +43,5 @@ export default async function GetPublicAssets(UserID) {
 		console.error("[GetPublicAssets: Error]", err);
 	}
 
-	return ToPascalCaseObject(Result);
+	return Result;
 }
