@@ -30,13 +30,19 @@ Users.GetFriends = async function (UserID) {
 
 Users.GetBadges = async function (UserID) {
 	const URL = `https://badges.roblox.com/v1/users/${UserID}/badges?limit=100`;
-	const Badges = await GetAllPages(URL, async (Badge) => ({
-		ID: Badge.id,
-		Name: Badge.name,
-		Description: Badge.description,
-		AwardedDate: Badge.awardedDate,
-		Thumbnail: Badge.imageUrl
-	}));
+
+	const Badges = await GetAllPages(URL, async (Badge) => {
+		return ToPascalCaseObject({
+			ID: Badge.id,
+			Name: Badge.name,
+			Description: Badge.description,
+			AwardedDate: Badge.awardedDate,
+			AwardedCount: Badge.statistics?.awardedCount || 0,
+			WinRatePercentage: Badge.statistics?.winRatePercentage || null,
+			Thumbnail: Badge.imageUrl || null
+		});
+	});
+
 	return {
 		Count: Badges.length,
 		List: Badges
