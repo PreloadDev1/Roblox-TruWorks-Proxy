@@ -5,6 +5,10 @@ import { GetAllPages } from "../Utilities/GetAllPages.mjs";
 
 const Users = {};
 
+const Test = await fetch("https://users.roblox.com/v1/users/1");
+const Body = await Test.text();
+console.log("[FETCH TEST]", Body);
+
 Users.GetStoreAssets = async function (UserID, CreatorType, CreatorID) {
 	const URL = `https://catalog.roblox.com/v1/search/items/details?CreatorTargetId=${UserID}&CreatorType=1&Limit=30`;
 	return await GetAllPages(URL, GetMarketInfo(CreatorType, CreatorID));
