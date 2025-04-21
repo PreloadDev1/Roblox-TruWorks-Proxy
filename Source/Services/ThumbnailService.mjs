@@ -1,30 +1,29 @@
-import express from "express";
-import { ToPascalCaseObject } from "../Utilities/ToPascal.mjs";
+import Express from "express";
 
-const Router = express.Router();
+const Router = Express.Router();
 
-async function GetThumbnail(UniverseID) {
-	const Res = await fetch(
-		`https://thumbnails.roblox.com/v1/games/icons?universeIds=${UniverseID}&size=150x150&format=Png&isCircular=false`
-	);
+export async function GetThumbnail(UniverseID) {
+	const Response = await fetch(`https://thumbnails.roblox.com/v1/games/icons?universeIds=${UniverseID}&size=150x150&format=Png&isCircular=false`);
+	if (!Response.ok) return null;
 
-	if (!Res.ok) return null;
-
-	const Data = await Res.json();
-	const Found = Data?.data?.find((T) => T.targetId === Number(UniverseID));
+	const Data = await Response.json();
+	const Found = Data?.data?.find((Item) => Item.targetId === Number(UniverseID));
 
 	return Found?.imageUrl || null;
 }
 
-Router.get("/game/:universeId", async (Req, Res) => {
-	const Thumbnail = await GetThumbnail(Req.params.universeId);
-
-	if (Thumbnail) {
-		Res.json({ Thumbnail });
-	} else {
-		Res.status(404).json({ error: "Thumbnail not found" });
+Router.get("/game/:UniverseID", async (Request, Response) => {
+	try {
+		const Thumbnail = await GetThumbnail(Request.params.UniverseID);
+		if (Thumbnail) {
+			Response.json({ Thumbnail });
+		} else {
+			Response.status(404).json({ Error: "Thumbnail not found" });
+		}
+	} catch (Error) {
+		console.error("[/game/:UniverseID]", Error);
+		Response.status(500).json({ Error: "Failed to fetch thumbnail" });
 	}
 });
 
-export { GetThumbnail };
 export default Router;
