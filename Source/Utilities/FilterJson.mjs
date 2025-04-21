@@ -4,10 +4,10 @@ export default async function FilterJSON({ URL, Filter, Exhaust }) {
 	let Done = false;
 
 	while (!Done) {
-		const Res = await fetch(`${URL}&cursor=${Cursor}`);
-		if (!Res.ok) break;
+		const Response = await fetch(`${URL}&cursor=${Cursor}`);
+		if (!Response.ok) break;
 
-		const Body = await Res.json();
+		const Body = await Response.json();
 		if (!Array.isArray(Body.data)) break;
 
 		for (const Row of Body.data) {
