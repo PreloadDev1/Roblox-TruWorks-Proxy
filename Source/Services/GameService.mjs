@@ -23,8 +23,8 @@ function ParseDate(dateString) {
 
 class Games {
   static async Get(creatorId, creatorType) {
-    const uri    = creatorType === CreatorTypes.User ? "users" : "groups"
-    const list   = await FilterJSON({
+    const uri  = creatorType === CreatorTypes.User ? "users" : "groups"
+    const list = await FilterJSON({
       URL:     `https://games.roblox.com/v2/${uri}/${creatorId}/games?accessFilter=2&limit=50&sortOrder=Asc`,
       Exhaust: true,
       Filter:  g => ({
@@ -32,14 +32,19 @@ class Games {
         PlaceID:    g.rootPlace?.id
       })
     })
+
     const out = []
+
     for (const { UniverseID, PlaceID } of list) {
       if (!PlaceID) continue
+
       const uniRes = await fetch(`https://apis.roblox.com/universes/v1/places/${PlaceID}/universe`)
       if (!uniRes.ok) continue
+
       const { universeId } = await uniRes.json()
       const gameRes        = await fetch(`https://games.roblox.com/v1/games?universeIds=${universeId}`)
       if (!gameRes.ok) continue
+
       const { data } = await gameRes.json()
       const g        = data?.[0]
       if (!g) continue
@@ -53,7 +58,8 @@ class Games {
         Description: null,
         IsBanned:    false
       }
-      if (g.creator?.type === "User") {
+
+      if (g.creator.type === "User") {
         try {
           creator = await ProfileService.GetBasicInfo(g.creator.id)
         } catch {}
@@ -88,6 +94,7 @@ class Games {
         Passes:                  passes
       })
     }
+
     return out
   }
 
@@ -124,9 +131,11 @@ class Games {
   static async GetGameData(placeId) {
     const uniRes = await fetch(`https://apis.roblox.com/universes/v1/places/${placeId}/universe`)
     if (!uniRes.ok) return null
+
     const { universeId } = await uniRes.json()
     const gameRes        = await fetch(`https://games.roblox.com/v1/games?universeIds=${universeId}`)
     if (!gameRes.ok) return null
+
     const { data } = await gameRes.json()
     const g        = data?.[0]
     if (!g) return null
@@ -140,7 +149,8 @@ class Games {
       Description: null,
       IsBanned:    false
     }
-    if (g.creator?.type === "User") {
+
+    if (g.creator.type === "User") {
       try {
         creatorInfo = await ProfileService.GetBasicInfo(g.creator.id)
       } catch {}
