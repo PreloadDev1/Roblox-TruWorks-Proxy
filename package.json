@@ -2,10 +2,10 @@
   "name": "roblox-truworks-proxy",
   "version": "1.0.0",
   "description": "A Roblox proxy for public data",
-  "main": "Source/Server.mjs",
+  "main": "Source/Main.mjs",
   "type": "module",
   "scripts": {
-    "start": "node Source/Server.mjs"
+    "start": "node Source/Main.mjs"
   },
   "dependencies": {
     "express": "^4.18.2",
