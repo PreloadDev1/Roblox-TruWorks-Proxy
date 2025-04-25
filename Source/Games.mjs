@@ -109,16 +109,30 @@ Games.getByUniverseId = async function(UniverseID) {
 }
 
 Games.getPasses = async function(UniverseID) {
-    const Passes = await filterJSON({
+    const RawPasses = await filterJSON({
         url: `https://games.roblox.com/v1/games/${UniverseID}/game-passes?limit=10&sortOrder=Asc`,
         exhaust: true,
-        filter: item => {
-            return {
-                ID: item.id,
-                Name: item.name,
-                Price: item.price ?? 0,
-            }
-        },
+        filter: item => item,
+    })
+
+    const IDs = RawPasses.map(p => p.id).join(",")
+    const InfoResponse = await fetch(`https://catalog.roblox.com/v1/catalog/items/details?itemIds=${IDs}`)
+    const InfoData = InfoResponse.ok ? await InfoResponse.json() : { data: [] }
+
+    const ThumbnailsResponse = await fetch(`https://thumbnails.roblox.com/v1/assets?assetIds=${IDs}&format=Png&size=150x150`)
+    const ThumbnailsData = ThumbnailsResponse.ok ? await ThumbnailsResponse.json() : { data: [] }
+
+    const Passes = RawPasses.map(item => {
+        const Info = InfoData.data.find(i => i.id === item.id) || {}
+        const Thumbnail = ThumbnailsData.data.find(t => t.assetId === item.id)
+
+        return {
+            ID: item.id,
+            Name: item.name,
+            Price: item.price ?? 0,
+            Description: Info.description || "",
+            Thumbnail: Thumbnail?.imageUrl || "",
+        }
     })
 
     return Passes
