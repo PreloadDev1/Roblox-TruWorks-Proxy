@@ -1,6 +1,6 @@
 import Groups from "./Groups.mjs"
 import Games, { CreatorTypes } from "./Games.mjs"
-import filterJSON, { getMarketInfo } from "./FilterJson.mjs"
+import filterJSON, { GetMarketInfo } from "./FilterJson.mjs"
 
 const Assets = {}
 
