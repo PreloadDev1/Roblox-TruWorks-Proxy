@@ -3,6 +3,19 @@ import Games from "./Games.mjs"
 
 const Badges = {}
 
+function parseDate(DateString) {
+    const DateObject = new Date(DateString)
+    return {
+        Year: DateObject.getUTCFullYear(),
+        Month: DateObject.getUTCMonth() + 1,
+        Day: DateObject.getUTCDate(),
+        Hour: DateObject.getUTCHours(),
+        Minute: DateObject.getUTCMinutes(),
+        Second: DateObject.getUTCSeconds(),
+        Millisecond: DateObject.getUTCMilliseconds(),
+    }
+}
+
 Badges.GetBadgeInfo = async function(UserID) {
     const BadgesList = await filterJSON({
         url: `https://badges.roblox.com/v1/users/${UserID}/badges?limit=100&sortOrder=Desc`,
@@ -14,8 +27,8 @@ Badges.GetBadgeInfo = async function(UserID) {
                 Description: badge.description,
                 AwardedCount: badge.awardedCount,
                 WinRatePercentage: badge.winRatePercentage,
-                Created: badge.created,
-                Updated: badge.updated,
+                Created: parseDate(badge.created),
+                Updated: parseDate(badge.updated),
                 PlaceID: badge.statistics.placeId,
                 UniverseID: badge.statistics.universeId,
             }
