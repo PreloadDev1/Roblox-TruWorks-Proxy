@@ -1,4 +1,4 @@
-import filterJSON, { getMarketInfo, getIndentificationInfo } from "./filterjson.mjs"
+import filterJSON, { getMarketInfo, getIndentificationInfo } from "./FilterJson.mjs"
 
 
 const Games = {}
