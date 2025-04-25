@@ -1,46 +1,47 @@
-export default async function filterJSON(parameters) {
-    let results = []
+import fetch from "node-fetch"
+
+export default async function FilterJSON(Parameters) {
+    let Results = []
+    let Cursor = ""
 
     try {
-        let cursor = ""
+        while (true) {
+            const Response = await fetch(`${Parameters.url}&cursor=${Cursor}`)
+            if (!Response.ok) break
 
-        const response = await fetch(parameters.url + `&cursor=${cursor}`)
-        if (!response.ok) {
-            return
-        }
+            const Body = await Response.json()
 
-        const body = await response.json()
+            for (const Row of Body.data) {
+                const Result = Parameters.filter(Row)
+                if (Result) {
+                    Results.push(Result)
+                }
+            }
 
-        for (const row of body.data) {
-            const result = parameters.filter(row)
-            if (result) {
-                results.push(result)
+            if (Body.nextPageCursor && Parameters.exhaust) {
+                Cursor = Body.nextPageCursor
+            } else {
+                break
             }
         }
-
-        if (body.nextPageCursor && parameters.exhaust) {
-            cursor = body.nextPageCursor
-        }
-
-    } 
-    catch (error) {
-        console.log(error)
+    } catch (Error) {
+        console.log(Error)
     }
 
-    return results
+    return Results
 }
 
-export function getMarketInfo(item) {
+export function GetMarketInfo(Item) {
     return {
-        id: item.id,
-        name: item.name,
-        price: item.price,
+        ID: Item.id,
+        Name: Item.name,
+        Price: Item.price ?? 0,
     }
 }
 
-export function getIndentificationInfo(item) {
+export function GetIdentificationInfo(Item) {
     return {
-        id: item.id,
-        name: item.name,
+        ID: Item.id,
+        Name: Item.name,
     }
 }
