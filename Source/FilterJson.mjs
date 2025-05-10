@@ -6,8 +6,9 @@ export default async function FilterJSON(Parameters) {
 
     try {
         while (true) {
+            const HasQuery = Parameters.url.includes("?")
             const Url = Cursor 
-                ? `${Parameters.url}&cursor=${Cursor}` 
+                ? `${Parameters.url}${HasQuery ? "&" : "?"}cursor=${Cursor}` 
                 : Parameters.url
 
             const Response = await fetch(Url)
