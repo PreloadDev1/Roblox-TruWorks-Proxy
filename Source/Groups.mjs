@@ -1,4 +1,4 @@
-import FilterJSON, { GetMarketInfo } from "./FilterJson.mjs"
+import FilterJSON, { GetMarketInfo, GetIdentificationInfo } from "./FilterJson.mjs"
 import Games, { CreatorTypes } from "./Games.mjs"
 
 const Groups = {}
@@ -18,15 +18,12 @@ function ParseDate(DateString) {
 
 Groups.Get = async function(UserID) {
     const GroupsList = await FilterJSON({
-        url: `https://groups.roblox.com/v2/users/${UserID}/groups/roles`,
-        exhaust: true,
+        url: `https://groups.roblox.com/v1/users/${UserID}/groups/roles?includeLocked=false&includeNotificationPreferences=false`,
+        exhaust: false,
         filter: Entry => {
-            if (Entry.role.rank === 255) {
-                return {
-                    ID: Entry.group.id,
-                    Name: Entry.group.name,
-                }
-            }
+            const Group = Entry.group
+            if (Group.owner.userId != UserID) return
+            return GetIdentificationInfo(Group)
         },
     })
 
@@ -34,13 +31,13 @@ Groups.Get = async function(UserID) {
 }
 
 Groups.GetStoreAssets = async function(GroupID) {
-    const Assets = await FilterJSON({
-        url: `https://catalog.roblox.com/v1/search/items?category=11&creatorType=Group&creatorTargetId=${GroupID}&limit=120&salesTypeFilter=1&sortOrder=Asc`,
+    const StoreAssets = await FilterJSON({
+        url: `https://catalog.roblox.com/v1/search/items/details?CreatorTargetId=${GroupID}&CreatorType=2&Limit=30`,
         exhaust: true,
         filter: GetMarketInfo,
     })
 
-    return Assets
+    return StoreAssets
 }
 
 Groups.GetDetailedList = async function(UserID) {
