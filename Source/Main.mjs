@@ -46,6 +46,31 @@ App.get("/badges/:id", async (Req, Res) => {
     Res.json(Data)
 })
 
+App.get("/avatar/:id", async (Req, Res) => {
+    const Data = await Avatar.GetAvatarData(Req.params.id)
+    Res.json(Data)
+})
+
+App.get("/group/:id", async (Req, Res) => {
+    const Data = await Groups.GetGroupData(Req.params.id)
+    Res.json(Data)
+})
+
+App.get("/game/:id", async (Req, Res) => {
+    const Data = await Games.GetGameData(Req.params.id)
+    Res.json(Data)
+})
+
+App.get("/devproducts/:id", async (Req, Res) => {
+    const Data = await DevProducts.GetDevProducts(Req.params.id)
+    Res.json(Data)
+})
+
+App.get("/profile/:id/socials", async (Req, Res) => {
+    const Data = await Profile.GetSocialLinks(Req.params.id)
+    Res.json(Data)
+})
+
 App.listen(3000, () => {
     console.log("TruProxy server running on port 3000")
 })
