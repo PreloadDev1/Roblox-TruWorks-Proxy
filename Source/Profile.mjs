@@ -5,7 +5,7 @@ import Groups from "./Groups.mjs"
 import Assets from "./Assets.mjs"
 import Badges from "./Badges.mjs"
 
-function parseDate(DateString) {
+function ParseDate(DateString) {
     const DateObject = new Date(DateString)
     return {
         Year: DateObject.getUTCFullYear(),
@@ -26,10 +26,10 @@ Profile.GetProfileData = async function(UserID) {
 
     const ProfileData = await ProfileResponse.json()
 
-    const GamesList = await Games.getDetailedList(UserID, CreatorTypes.User)
-    const GroupsList = await Groups.getDetailedList(UserID)
-    const FollowerInfo = await Followers.GetFollowerInfo(UserID)
-    const FriendInfo = await Friends.GetFriendInfo(UserID)
+    const GamesList = await Games.GetDetailedList(UserID, CreatorTypes.User)
+    const GroupsList = await Groups.GetDetailedList(UserID)
+    const FollowerInfo = await Followers.GetFollowers(UserID)
+    const FriendInfo = await Friends.GetFriends(UserID)
     const PublicAssets = await Assets.GetPublicAssets(UserID)
     const BadgeInfo = await Badges.GetBadgeInfo(UserID)
 
@@ -62,7 +62,7 @@ Profile.GetProfileData = async function(UserID) {
         Description: ProfileData.description || "",
         IsBanned: false,
         IsVerified: ProfileData.hasVerifiedBadge || false,
-        Created: parseDate(ProfileData.created),
+        Created: ParseDate(ProfileData.created),
         Games: GamesList,
         Groups: GroupsList,
         GroupMembers: GroupMembers,
@@ -71,10 +71,13 @@ Profile.GetProfileData = async function(UserID) {
         Likes: Likes,
         Dislikes: Dislikes,
         Visits: Visits,
-        FollowerInfo: FollowerInfo,
-        FriendInfo: FriendInfo,
+        Followers: FollowerInfo.Followers,
+        FollowerCount: FollowerInfo.FollowerCount,
+        Friends: FriendInfo.Friends,
+        FriendCount: FriendInfo.FriendCount,
         PublicAssets: PublicAssets,
-        BadgeInfo: BadgeInfo,
+        Badges: BadgeInfo.Badges,
+        BadgeCount: BadgeInfo.BadgeCount,
     }
 }
 
