@@ -1,4 +1,4 @@
-import FilterJSON from "./FilterJson.mjs"
+import FilterJSON, { GetMarketInfo, GetIdentificationInfo } from "./FilterJson.mjs"
 
 const Games = {}
 
@@ -30,12 +30,9 @@ Games.Get = async function(CreatorID, CreatorType) {
     if (!CreatorTypeUri) throw new Error("Unknown creator type.")
 
     const GamesList = await FilterJSON({
-        url: `https://games.roblox.com/v2/${CreatorTypeUri}/${CreatorID}/games?accessFilter=2&limit=100&sortOrder=Asc`,
+        url: `https://games.roblox.com/v2/${CreatorTypeUri}/${CreatorID}/games?accessFilter=2&limit=50&sortOrder=Asc`,
         exhaust: true,
-        filter: Game => ({
-            ID: Game.id,
-            Name: Game.name,
-        }),
+        filter: GetIdentificationInfo,
     })
 
     return GamesList
@@ -51,7 +48,7 @@ Games.GetDetailedList = async function(CreatorID, CreatorType) {
     if (!CreatorTypeUri) throw new Error("Unknown creator type.")
 
     const GamesList = await FilterJSON({
-        url: `https://games.roblox.com/v2/${CreatorTypeUri}/${CreatorID}/games?accessFilter=2&limit=100&sortOrder=Asc`,
+        url: `https://games.roblox.com/v2/${CreatorTypeUri}/${CreatorID}/games?accessFilter=2&limit=50&sortOrder=Asc`,
         exhaust: true,
         filter: Game => ({
             ActivePlayers: Game.playing,
@@ -101,32 +98,10 @@ Games.GetByUniverseId = async function(UniverseID) {
 }
 
 Games.GetPasses = async function(UniverseID) {
-    const RawPasses = await FilterJSON({
-        url: `https://games.roblox.com/v1/games/${UniverseID}/game-passes?limit=100&sortOrder=Asc`,
+    const Passes = await FilterJSON({
+        url: `https://games.roblox.com/v1/games/${UniverseID}/game-passes?limit=10&sortOrder=1`,
         exhaust: true,
-        filter: Item => Item,
-    })
-
-    const IDs = RawPasses.map(P => P.id).join(",")
-    if (!IDs) return []
-
-    const InfoResponse = await fetch(`https://catalog.roblox.com/v1/catalog/items/details?itemIds=${IDs}`)
-    const InfoData = InfoResponse.ok ? await InfoResponse.json() : { data: [] }
-
-    const ThumbnailsResponse = await fetch(`https://thumbnails.roblox.com/v1/assets?assetIds=${IDs}&format=Png&size=150x150`)
-    const ThumbnailsData = ThumbnailsResponse.ok ? await ThumbnailsResponse.json() : { data: [] }
-
-    const Passes = RawPasses.map(Item => {
-        const Info = InfoData.data.find(I => I.id === Item.id) || {}
-        const Thumbnail = ThumbnailsData.data.find(T => T.assetId === Item.id)
-
-        return {
-            ID: Item.id,
-            Name: Item.name,
-            Price: Item.price ?? 0,
-            Description: Info.description || "",
-            Thumbnail: Thumbnail?.imageUrl || "",
-        }
+        filter: GetMarketInfo,
     })
 
     return Passes
