@@ -1,4 +1,4 @@
-import filterJSON from "./FilterJson.mjs"
+import FilterJSON from "./FilterJson.mjs"
 
 const Games = {}
 
@@ -7,7 +7,7 @@ const CreatorTypes = {
     Group: "Group",
 }
 
-function parseDate(DateString) {
+function ParseDate(DateString) {
     const DateObject = new Date(DateString)
     return {
         Year: DateObject.getUTCFullYear(),
@@ -20,81 +20,73 @@ function parseDate(DateString) {
     }
 }
 
-Games.get = async function(CreatorID, CreatorType) {
+Games.Get = async function(CreatorID, CreatorType) {
     const CreatorTypeUris = {
         [CreatorTypes.User]: "users",
         [CreatorTypes.Group]: "groups",
     }
 
     const CreatorTypeUri = CreatorTypeUris[CreatorType]
-    if (!CreatorTypeUri) {
-        throw new Error("Unknown creator type.")
-    }
+    if (!CreatorTypeUri) throw new Error("Unknown creator type.")
 
-    const GamesList = await filterJSON({
-        url: `https://games.roblox.com/v2/${CreatorTypeUri}/${CreatorID}/games?accessFilter=2&limit=50&sortOrder=Asc`,
+    const GamesList = await FilterJSON({
+        url: `https://games.roblox.com/v2/${CreatorTypeUri}/${CreatorID}/games?accessFilter=2&limit=100&sortOrder=Asc`,
         exhaust: true,
-        filter: game => {
-            return {
-                ID: game.id,
-                Name: game.name,
-            }
-        },
+        filter: Game => ({
+            ID: Game.id,
+            Name: Game.name,
+        }),
     })
 
     return GamesList
 }
 
-Games.getDetailedList = async function(CreatorID, CreatorType) {
+Games.GetDetailedList = async function(CreatorID, CreatorType) {
     const CreatorTypeUris = {
         [CreatorTypes.User]: "users",
         [CreatorTypes.Group]: "groups",
     }
 
     const CreatorTypeUri = CreatorTypeUris[CreatorType]
-    if (!CreatorTypeUri) {
-        throw new Error("Unknown creator type.")
-    }
+    if (!CreatorTypeUri) throw new Error("Unknown creator type.")
 
-    const GamesList = await filterJSON({
-        url: `https://games.roblox.com/v2/${CreatorTypeUri}/${CreatorID}/games?accessFilter=2&limit=50&sortOrder=Asc`,
+    const GamesList = await FilterJSON({
+        url: `https://games.roblox.com/v2/${CreatorTypeUri}/${CreatorID}/games?accessFilter=2&limit=100&sortOrder=Asc`,
         exhaust: true,
-        filter: game => {
-            return {
-                ActivePlayers: game.playing,
-                AllowedGearCategories: [],
-                AllowedGearGenres: [],
-                AvatarType: "MorphToR15",
-                CopyingAllowed: game.copyingAllowed,
-                CreateVipServersAllowed: game.createVipServersAllowed,
-                Created: parseDate(game.created),
-                Updated: parseDate(game.updated),
-                Creator: {
-                    ID: game.creator.id,
-                    Name: game.creator.name,
-                    Type: game.creator.type,
-                },
-                Description: game.description || "",
-                Favourites: game.favoritedCount,
-                Genre1: game.genre,
-                Genre2: "",
-                Genre3: "",
-                Name: game.name,
-                Passes: [],
-                PlaceID: game.rootPlaceId,
-                ServerSize: game.maxPlayers,
-                SourcedName: game.name,
-                Thumbnail: game.thumbnailUrl || "",
-                UniverseID: game.id,
-                Visits: game.visits,
-            }
-        },
+        filter: Game => ({
+            ActivePlayers: Game.playing,
+            AllowedGearCategories: [],
+            AllowedGearGenres: [],
+            AvatarType: "MorphToR15",
+            CopyingAllowed: Game.copyingAllowed,
+            CreateVipServersAllowed: Game.createVipServersAllowed,
+            Created: ParseDate(Game.created),
+            Updated: ParseDate(Game.updated),
+            Creator: {
+                ID: Game.creator.id,
+                Name: Game.creator.name,
+                Type: Game.creator.type,
+            },
+            Description: Game.description || "",
+            Favourites: Game.favoritedCount,
+            Genre1: Game.genre,
+            Genre2: "",
+            Genre3: "",
+            Name: Game.name,
+            Passes: [],
+            PlaceID: Game.rootPlaceId,
+            ServerSize: Game.maxPlayers,
+            SourcedName: Game.name,
+            Thumbnail: Game.thumbnailUrl || "",
+            UniverseID: Game.id,
+            Visits: Game.visits,
+        }),
     })
 
     return GamesList
 }
 
-Games.getByUniverseId = async function(UniverseID) {
+Games.GetByUniverseId = async function(UniverseID) {
     const Response = await fetch(`https://games.roblox.com/v1/games?universeIds=${UniverseID}`)
     if (!Response.ok) return null
 
@@ -108,28 +100,30 @@ Games.getByUniverseId = async function(UniverseID) {
     }
 }
 
-Games.getPasses = async function(UniverseID) {
-    const RawPasses = await filterJSON({
-        url: `https://games.roblox.com/v1/games/${UniverseID}/game-passes?limit=10&sortOrder=Asc`,
+Games.GetPasses = async function(UniverseID) {
+    const RawPasses = await FilterJSON({
+        url: `https://games.roblox.com/v1/games/${UniverseID}/game-passes?limit=100&sortOrder=Asc`,
         exhaust: true,
-        filter: item => item,
+        filter: Item => Item,
     })
 
-    const IDs = RawPasses.map(p => p.id).join(",")
+    const IDs = RawPasses.map(P => P.id).join(",")
+    if (!IDs) return []
+
     const InfoResponse = await fetch(`https://catalog.roblox.com/v1/catalog/items/details?itemIds=${IDs}`)
     const InfoData = InfoResponse.ok ? await InfoResponse.json() : { data: [] }
 
     const ThumbnailsResponse = await fetch(`https://thumbnails.roblox.com/v1/assets?assetIds=${IDs}&format=Png&size=150x150`)
     const ThumbnailsData = ThumbnailsResponse.ok ? await ThumbnailsResponse.json() : { data: [] }
 
-    const Passes = RawPasses.map(item => {
-        const Info = InfoData.data.find(i => i.id === item.id) || {}
-        const Thumbnail = ThumbnailsData.data.find(t => t.assetId === item.id)
+    const Passes = RawPasses.map(Item => {
+        const Info = InfoData.data.find(I => I.id === Item.id) || {}
+        const Thumbnail = ThumbnailsData.data.find(T => T.assetId === Item.id)
 
         return {
-            ID: item.id,
-            Name: item.name,
-            Price: item.price ?? 0,
+            ID: Item.id,
+            Name: Item.name,
+            Price: Item.price ?? 0,
             Description: Info.description || "",
             Thumbnail: Thumbnail?.imageUrl || "",
         }
