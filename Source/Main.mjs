@@ -22,7 +22,7 @@ App.get("/followers/:id", async (Req, Res) => {
 })
 
 App.get("/friends/:id", async (Req, Res) => {
-    const Data = await Friends.GetFriendInfo(Req.params.id)
+    const Data = await Friends.GetFriends(Req.params.id)
     Res.json(Data)
 })
 
@@ -32,12 +32,12 @@ App.get("/assets/:id", async (Req, Res) => {
 })
 
 App.get("/games/:id", async (Req, Res) => {
-    const Data = await Games.getDetailedList(Req.params.id, "User")
+    const Data = await Games.GetDetailedList(Req.params.id, "User")
     Res.json(Data)
 })
 
 App.get("/groups/:id", async (Req, Res) => {
-    const Data = await Groups.getDetailedList(Req.params.id)
+    const Data = await Groups.GetDetailedList(Req.params.id)
     Res.json(Data)
 })
 
