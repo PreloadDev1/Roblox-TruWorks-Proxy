@@ -17,7 +17,7 @@ App.get("/profile/:id", async (Req, Res) => {
 })
 
 App.get("/followers/:id", async (Req, Res) => {
-    const Data = await Followers.GetFollowerInfo(Req.params.id)
+    const Data = await Followers.GetFollowers(Req.params.id)
     Res.json(Data)
 })
 
