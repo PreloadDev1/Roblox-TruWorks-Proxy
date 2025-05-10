@@ -6,7 +6,11 @@ export default async function FilterJSON(Parameters) {
 
     try {
         while (true) {
-            const Response = await fetch(`${Parameters.url}&cursor=${Cursor}`)
+            const Url = Cursor 
+                ? `${Parameters.url}&cursor=${Cursor}` 
+                : Parameters.url
+
+            const Response = await fetch(Url)
             if (!Response.ok) break
 
             const Body = await Response.json()
