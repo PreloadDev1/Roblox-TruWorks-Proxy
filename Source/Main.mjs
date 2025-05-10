@@ -22,7 +22,7 @@ App.get("/followers/:id", async (Req, Res) => {
 })
 
 App.get("/friends/:id", async (Req, Res) => {
-    const Data = await Friends.GetFriends(Req.params.id)
+    const Data = await Friends.GetFriendInfo(Req.params.id)
     Res.json(Data)
 })
 
