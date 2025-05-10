@@ -1,6 +1,6 @@
 import Groups from "./Groups.mjs"
 import Games, { CreatorTypes } from "./Games.mjs"
-import filterJSON, { GetMarketInfo } from "./FilterJson.mjs"
+import FilterJSON, { GetMarketInfo } from "./FilterJson.mjs"
 
 const Assets = {}
 
@@ -19,10 +19,10 @@ Assets.GetPublicAssets = async function(UserID) {
         Result.UserPasses.push(...Passes)
     }
 
-    const UserItems = await filterJSON({
-        url: `https://catalog.roblox.com/v1/search/items?category=11&creatorType=User&creatorTargetId=${UserID}&limit=30&salesTypeFilter=1&sortOrder=Asc`,
+    const UserItems = await FilterJSON({
+        url: `https://catalog.roblox.com/v1/search/items?category=11&creatorType=User&creatorTargetId=${UserID}&limit=120&salesTypeFilter=1&sortOrder=Asc`,
         exhaust: true,
-        filter: getMarketInfo,
+        filter: GetMarketInfo,
     })
 
     Result.UserMerch.push(...UserItems)
@@ -37,10 +37,10 @@ Assets.GetPublicAssets = async function(UserID) {
             Result.GroupPasses.push(...Passes)
         }
 
-        const GroupItems = await filterJSON({
-            url: `https://catalog.roblox.com/v1/search/items?category=11&creatorType=Group&creatorTargetId=${Group.id}&limit=30&salesTypeFilter=1&sortOrder=Asc`,
+        const GroupItems = await FilterJSON({
+            url: `https://catalog.roblox.com/v1/search/items?category=11&creatorType=Group&creatorTargetId=${Group.id}&limit=120&salesTypeFilter=1&sortOrder=Asc`,
             exhaust: true,
-            filter: getMarketInfo,
+            filter: GetMarketInfo,
         })
 
         Result.GroupMerch.push(...GroupItems)
