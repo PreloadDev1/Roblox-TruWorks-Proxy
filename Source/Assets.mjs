@@ -12,10 +12,10 @@ Assets.GetPublicAssets = async function(UserID) {
         GroupMerch: [],
     }
 
-    const GamesList = await Games.get(UserID, CreatorTypes.User)
+    const GamesList = await Games.Get(UserID, CreatorTypes.User)
 
     for (const Game of GamesList) {
-        const Passes = await Games.getPasses(Game.id)
+        const Passes = await Games.GetPasses(Game.ID)
         Result.UserPasses.push(...Passes)
     }
 
@@ -27,18 +27,18 @@ Assets.GetPublicAssets = async function(UserID) {
 
     Result.UserMerch.push(...UserItems)
 
-    const GroupsList = await Groups.get(UserID)
+    const GroupsList = await Groups.Get(UserID)
 
     for (const Group of GroupsList) {
-        const GroupGames = await Games.get(Group.id, CreatorTypes.Group)
+        const GroupGames = await Games.Get(Group.ID, CreatorTypes.Group)
 
         for (const Game of GroupGames) {
-            const Passes = await Games.getPasses(Game.id)
+            const Passes = await Games.GetPasses(Game.ID)
             Result.GroupPasses.push(...Passes)
         }
 
         const GroupItems = await FilterJSON({
-            url: `https://catalog.roblox.com/v1/search/items?category=11&creatorType=Group&creatorTargetId=${Group.id}&limit=120&salesTypeFilter=1&sortOrder=Asc`,
+            url: `https://catalog.roblox.com/v1/search/items?category=11&creatorType=Group&creatorTargetId=${Group.ID}&limit=120&salesTypeFilter=1&sortOrder=Asc`,
             exhaust: true,
             filter: GetMarketInfo,
         })
